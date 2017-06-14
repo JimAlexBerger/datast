@@ -9,8 +9,9 @@ window.onload = function() {
 }
 
 function saveToDatabase() {
-console.log("lagra, lover")
+    console.log("lagra, lover")
 }
+
 function login() {
     if (user) {
         firebase.auth().signOut().then(function() {
@@ -20,9 +21,9 @@ function login() {
             console.log(error)
         });
     } else {
-        firebase.auth().signInWithPopup(provider)
-
-    }
+        loginWithGoogle()
+    });
+}
 }
 
 function render() {
