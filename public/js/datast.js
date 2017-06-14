@@ -22,8 +22,7 @@ function login() {
         });
     } else {
         loginWithGoogle()
-    });
-}
+    }
 }
 
 function render() {
