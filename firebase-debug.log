@@ -26,3 +26,39 @@
 [info] i  hosting: Serving hosting files from: public
 [info] +  hosting: Local server: http://localhost:5000
 
+[debug] [2017-06-14T20:19:10.437Z] ----------------------------------------------------------------------
+[debug] [2017-06-14T20:19:10.439Z] Command:      C:\Program Files\nodejs\node.exe C:\Users\tidem\AppData\Roaming\npm\node_modules\firebase-tools\bin\firebase serve
+[debug] [2017-06-14T20:19:10.440Z] CLI Version:  3.9.1
+[debug] [2017-06-14T20:19:10.440Z] Platform:     win32
+[debug] [2017-06-14T20:19:10.440Z] Node Version: v6.11.0
+[debug] [2017-06-14T20:19:10.440Z] Time:         Wed Jun 14 2017 22:19:10 GMT+0200 (Vest-Europa (sommertid))
+[debug] [2017-06-14T20:19:10.440Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2017-06-14T20:19:10.450Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2017-06-14T20:19:10.451Z] > authorizing via signed-in user
+[debug] [2017-06-14T20:19:10.452Z] > refreshing access token with scopes: ["email","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","openid"]
+[debug] [2017-06-14T20:19:10.452Z] >>> HTTP REQUEST POST https://www.googleapis.com/oauth2/v3/token { refresh_token: '1/hTCZymqZs44PqNGRqSX-ST9Lu0bdTwVqtMrjv4nQ-Zhho4qrezAYvNL4Txyb7T3J',
+  client_id: '563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com',
+  client_secret: 'j9iVZfS8kkCEFUPaAeJV0sAi',
+  grant_type: 'refresh_token',
+  scope: 'email https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/cloudplatformprojects.readonly https://www.googleapis.com/auth/firebase openid' } 
+ Wed Jun 14 2017 22:19:10 GMT+0200 (Vest-Europa (sommertid))
+[debug] [2017-06-14T20:19:10.620Z] <<< HTTP RESPONSE 200
+[debug] [2017-06-14T20:19:10.633Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/datast-24d32  
+ Wed Jun 14 2017 22:19:10 GMT+0200 (Vest-Europa (sommertid))
+[debug] [2017-06-14T20:19:11.538Z] <<< HTTP RESPONSE 200
+[debug] [2017-06-14T20:19:11.539Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/database/datast-24d32/tokens  
+ Wed Jun 14 2017 22:19:11 GMT+0200 (Vest-Europa (sommertid))
+[debug] [2017-06-14T20:19:12.239Z] <<< HTTP RESPONSE 200
+[info] 
+[info] === Serving from 'C:\datast'...
+[info] 
+[debug] [2017-06-14T20:19:12.247Z] >>> HTTP REQUEST GET https://cloudresourcemanager.googleapis.com/v1/projects/datast-24d32  
+ Wed Jun 14 2017 22:19:12 GMT+0200 (Vest-Europa (sommertid))
+[debug] [2017-06-14T20:19:13.196Z] <<< HTTP RESPONSE 200
+[debug] [2017-06-14T20:19:13.197Z] >>> HTTP REQUEST GET https://mobilesdk-pa.googleapis.com/v1/projects/671327180228/clients/_:getWebAppConfig  
+ Wed Jun 14 2017 22:19:13 GMT+0200 (Vest-Europa (sommertid))
+[debug] [2017-06-14T20:19:14.100Z] <<< HTTP RESPONSE 200
+[info] i  hosting: Serving hosting files from: public
+[info] +  hosting: Local server: http://localhost:5000
+
