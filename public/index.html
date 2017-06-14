@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>datast</title>
 
+    <!-- CSS -->
+    <link type="text/css" rel="stylesheet" href="css/indexStyle.css" />
+
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/4.1.2/firebase.js"></script>
     <!-- update the version number as needed -->
@@ -19,7 +22,10 @@
     <script defer src="/__/firebase/init.js"></script>
     <!-- Egne JS filer -->
     <script src="js/firebaseInit.js"></script>
-    <script src="js/googleAuthentication.js"></script><!-- firebase.auth().signInWithRedirect(provider) --><!-- firebase.auth().signInWithPopup(provider) -->
+    <script src="js/googleAuthentication.js"></script>
+    <script src="js/datast.js"></script>
+    <!-- firebase.auth().signInWithRedirect(provider) -->
+    <!-- firebase.auth().signInWithPopup(provider) -->
 
     </script>
 
@@ -27,16 +33,22 @@
 </head>
 
 <body>
-    <div id="javascriptPane">
-        Test
+    <div id="container">
+        <button id="loginBtn" >Login</button>
+        <button id="renderBtn" >Render</button>
+        <button id="saveBtn" >Save</button>
+
+        <div class="TextPane" id="javascriptPane" contentEditable=true>
+            JS
+        </div>
+        <div class="TextPane" id="HTMLPane" contentEditable=true>
+            HTML
+        </div>
+        <div class="TextPane" id="CssPane" contentEditable=true>
+            CSS
+        </div>
+        <iframe id="OutputPane"></iframe>
     </div>
-    <div id="HTMLPane">
-        Test
-    </div>
-    <div id="CssPane">
-        Test
-    </div>
-    <iframe id="OutputPane"></iframe>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
@@ -52,10 +64,10 @@
             try {
                 let app = firebase.app();
                 let features = ['auth', 'database', 'messaging', 'storage'].filter(feature => typeof app[feature] === 'function');
-                document.getElementById('load').innerHTML = `Firebase SDK loaded with ${features.join(', ')}`;
+                //document.getElementById('load').innerHTML = `Firebase SDK loaded with ${features.join(', ')}`;
             } catch (e) {
                 console.error(e);
-                document.getElementById('load').innerHTML = 'Error loading the Firebase SDK, check the console.';
+                //document.getElementById('load').innerHTML = 'Error loading the Firebase SDK, check the console.';
             }
         });
     </script>

@@ -1,0 +1,11 @@
+.TextPane{
+    background-color: #969696;
+    display: inline-block;
+    width: 25%;
+    height: 300px;
+}
+
+#OutputPane {
+    width: 100%;
+    height: 300px;
+}
