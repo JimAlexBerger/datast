@@ -9,14 +9,3 @@ var config = {
     messagingSenderId: "671327180228"
 };
 firebase.initializeApp(config);
-
-firebase.auth().onAuthStateChanged(function(u) {
-    //The u argument conatins information about the user
-    user = u
-  if (u) {
-      console.log(u)
-  } else {
-      console.log("ikke logget inn")
-      console.log(u)
-  }
-});

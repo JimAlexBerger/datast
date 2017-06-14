@@ -1,8 +1,17 @@
 window.onload = function() {
-    console.log(user)
-    if (user) {
-        document.getElementById("loginBtn").innerHTML = "Logg ut";
-    }
+    firebase.auth().onAuthStateChanged(function(u) {
+        //The u argument conatins information about the user
+        user = u
+      if (u) {
+          console.log(u)
+          document.getElementById("loginBtn").innerHTML = "Logg ut";
+      } else {
+          document.getElementById("loginBtn").innerHTML = "Logg inn";
+
+          console.log("ikke logget inn")
+          console.log(u)
+      }
+    });
     document.getElementById("renderBtn").onclick = render;
     document.getElementById("loginBtn").onclick = login;
     document.getElementById("saveBtn").onclick = saveToDatabase;
@@ -15,7 +24,6 @@ function saveToDatabase() {
 function login() {
     if (user) {
         firebase.auth().signOut().then(function() {
-            document.getElementById("loginBtn").innerHTML = "Logg inn";
         }).catch(function(error) {
             console.warn("feil ved utlogging")
             console.log(error)
