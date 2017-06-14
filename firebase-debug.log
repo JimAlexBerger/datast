@@ -62,3 +62,31 @@
 [info] i  hosting: Serving hosting files from: public
 [info] +  hosting: Local server: http://localhost:5000
 
+[debug] [2017-06-14T20:26:29.800Z] ----------------------------------------------------------------------
+[debug] [2017-06-14T20:26:29.800Z] Command:      C:\Program Files\nodejs\node.exe C:\Users\tidem\AppData\Roaming\npm\node_modules\firebase-tools\bin\firebase serve
+[debug] [2017-06-14T20:26:29.800Z] CLI Version:  3.9.1
+[debug] [2017-06-14T20:26:29.800Z] Platform:     win32
+[debug] [2017-06-14T20:26:29.800Z] Node Version: v6.11.0
+[debug] [2017-06-14T20:26:29.800Z] Time:         Wed Jun 14 2017 22:26:29 GMT+0200 (Vest-Europa (sommertid))
+[debug] [2017-06-14T20:26:29.800Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2017-06-14T20:26:29.816Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2017-06-14T20:26:29.816Z] > authorizing via signed-in user
+[debug] [2017-06-14T20:26:29.816Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/datast-24d32  
+ Wed Jun 14 2017 22:26:29 GMT+0200 (Vest-Europa (sommertid))
+[debug] [2017-06-14T20:26:30.685Z] <<< HTTP RESPONSE 200
+[debug] [2017-06-14T20:26:30.685Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/database/datast-24d32/tokens  
+ Wed Jun 14 2017 22:26:30 GMT+0200 (Vest-Europa (sommertid))
+[debug] [2017-06-14T20:26:31.342Z] <<< HTTP RESPONSE 200
+[info] 
+[info] === Serving from 'C:\datast'...
+[info] 
+[debug] [2017-06-14T20:26:31.357Z] >>> HTTP REQUEST GET https://cloudresourcemanager.googleapis.com/v1/projects/datast-24d32  
+ Wed Jun 14 2017 22:26:31 GMT+0200 (Vest-Europa (sommertid))
+[debug] [2017-06-14T20:26:32.248Z] <<< HTTP RESPONSE 200
+[debug] [2017-06-14T20:26:32.248Z] >>> HTTP REQUEST GET https://mobilesdk-pa.googleapis.com/v1/projects/671327180228/clients/_:getWebAppConfig  
+ Wed Jun 14 2017 22:26:32 GMT+0200 (Vest-Europa (sommertid))
+[debug] [2017-06-14T20:26:32.967Z] <<< HTTP RESPONSE 200
+[info] i  hosting: Serving hosting files from: public
+[info] +  hosting: Local server: http://localhost:5000
+
