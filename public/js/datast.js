@@ -1,4 +1,6 @@
 window.onload = function() {
+
+    //Setup loginbutton text
     firebase.auth().onAuthStateChanged(function(u) {
         //The u argument conatins information about the user
         user = u
@@ -12,6 +14,8 @@ window.onload = function() {
           console.log(u)
       }
     });
+
+    //onclick for buttons
     document.getElementById("renderBtn").onclick = render;
     document.getElementById("loginBtn").onclick = login;
     document.getElementById("saveBtn").onclick = saveToDatabase;
