@@ -1,7 +1,7 @@
 function renderValues(){
-    var css = document.getElementById("CssPane").innerHTML;
-    var html = document.getElementById("HTMLPane").innerHTML;
-    var js = document.getElementById("javascriptPane").innerHTML;
+    var css = document.getElementById("CssPane").value;
+    var html = document.getElementById("HTMLPane").value;
+    var js = document.getElementById("javascriptPane").value;
     var result = '<html><head><style>' + css + '</style></head><body>' + html + '<script type="text/javascript">' + js + '</script></body></html>'
     var iframe = document.getElementById('OutputPane');
 
