@@ -1,5 +1,8 @@
 var user = {}
+var liveID;
 window.onload = function() {
+     liveID = firebase.database().ref('projects/').push().key
+
     getdatastFromDatabase()
     //Sjekker om bruker er pålogget via google
     firebase.auth().onAuthStateChanged(function(u) {
@@ -17,12 +20,34 @@ window.onload = function() {
     document.getElementById("renderBtn").onclick = renderValues;
     document.getElementById("loginBtn").onclick = login;
     document.getElementById("saveBtn").onclick = saveToDatabase;
+    document.getElementById("live").onclick = toggleLive;
     document.getElementById("signinGoogle").addEventListener('click', function() {
         loginWithProvider(new firebase.auth.GoogleAuthProvider())
     });
     document.getElementById("signinFacebook").addEventListener('click', function() {
         loginWithProvider(new firebase.auth.FacebookAuthProvider())
     });
+}
+
+function toggleLive() {
+    var params = getParams()
+    var db = firebase.database()
+    db.ref('projects/' + params["id"]).once('value').then(function(snapshot){
+        //Hvis prosjektet finnes
+        if (snapshot.val()) {
+            if(!snapshot.val().liveID) {
+                db.ref('projects/' + params["id"]).set({
+                    js: javascriptPane.value,
+                    html: HTMLPane.value,
+                    css: CssPane.value,
+                    liveID: liveID
+                });
+            }
+            else {
+                db.ref('projects/' + params["id"] + "/liveID").remove()
+            }
+        }
+    })
 }
 
 function httpGetAsync(theUrl, callback) {
@@ -42,7 +67,7 @@ function saveToDatabase() {
         //Henter tiden (Brukes senere for å lagre UTC tid i databasen)
         var d = new Date();
         //Sjekker om brukeren har skriverettigheter til dette prosjektet
-        return firebase.database().ref('users/' + user.uid + "/projects/" + params["id"]).once('value').then(function(snapshot) {
+        firebase.database().ref('users/' + user.uid + "/projects/" + params["id"]).once('value').then(function(snapshot) {
             if (snapshot.val()) {
                 //Oppdaterer prosjektet med ny kode
                 firebase.database().ref('projects/' + params["id"]).set({

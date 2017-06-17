@@ -18,9 +18,3 @@ function loginWithProvider(provider) {
         // ...
     });
 }
-
-function loginWithFacebook() {
-    firebase.auth().FB.login(function(response) {
-        checkLoginReturnUser()
-    }, { scope: 'public_profile,email' });
-}
