@@ -24,23 +24,21 @@ window.onload = function() {
 }
 
 function saveToDatabase() {
-    if (checkFacebookLoginState()) {
+    if (checkFacebookLoginState() =="connected") {
 
     } else if (user) {
         //TODO:
-        var params = getParams()
-        if (params["id"]) {
             var d = new Date();
-            firebase.database().ref('projects/' + params["id"]).set({
+            var key = firebase.database().ref('projects/').push().key
+            firebase.database().ref('projects/' + key).set({
                 js: javascriptPane.value,
                 html: HTMLPane.value,
                 css: CssPane.value
             });
-            firebase.database().ref('users/' + user.uid + "/projects/" + params["id"]).set({
+            firebase.database().ref('users/' + user.uid + "/projects/" + key).set({
                 lastUpdated: new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()).toString()
             });
-            console.log("lagret i database")
-        }
+            window.location.replace("https://datast-24d32.firebaseapp.com/?id="+key)
     } else {
         alert("You have to be logged in to save")
     }
@@ -61,7 +59,7 @@ function login() {
     //TODO:
     //Sjekk hvilken måte brukeren er logget inn på (Facebook, Google, gitub osv)
     //Sjekker om bruker er logget på faebook
-    if (checkFacebookLoginState()) {
+    if (checkFacebookLoginState() == "connected") {
         FB.logout(function(response) {
             document.getElementById("loginpopup").style.visibility = "hidden"
             document.getElementById("loginBtn").innerHTML = "Login";
