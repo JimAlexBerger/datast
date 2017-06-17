@@ -32,16 +32,19 @@ function loginWithFacebook() {
 }
 
 function checkFacebookLoginState() {
+    var status;
     FB.getLoginStatus(function(response) {
-        console.log(response)
         if (response.status == "connected") {
             console.log("Logget inn med Facebook")
-            document.getElementById("loginpopup").style.visibility = "hidden"
-            document.getElementById("loginBtn").innerHTML = "Logout"
-            return true
+            document.getElementById("loginpopup").style.visibility = "hidden";
+            document.getElementById("loginBtn").innerHTML = "Logout";
+            status = true
         } else {
             console.log("ikke logget inn med Facebook")
-            return false
+            document.getElementById("loginpopup").style.visibility = "hidden";
+            document.getElementById("loginBtn").innerHTML = "Login";
+            status = false
         }
     });
+    return status;
 }
