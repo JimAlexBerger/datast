@@ -1,11 +1,5 @@
-function loginWithGoogle() {
-    var provider = new firebase.auth.GoogleAuthProvider();
+function loginWithProvider(provider) {
     firebase.auth().signInWithPopup(provider).then(function(result) {
-        // This gives you a Google Access Token. You can use it to access the Google API.
-        var token = result.credential.accessToken;
-        // The signed-in user info.
-        var user = result.user;
-        // ...
     }).catch(function(error) {
         console.warn("Error during login")
         // Handle Errors here.
@@ -26,24 +20,7 @@ function loginWithGoogle() {
 }
 
 function loginWithFacebook() {
-    FB.login(function(response) {
-        checkFacebookLoginState()
+    firebase.auth().FB.login(function(response) {
+        checkLoginReturnUser()
     }, { scope: 'public_profile,email' });
-}
-
-function checkFacebookLoginState() {
-    var status;
-    FB.getLoginStatus(function(response) {
-        status = response
-        if (response.status == "connected") {
-            console.log("Logget inn med Facebook")
-            document.getElementById("loginpopup").style.visibility = "hidden";
-            document.getElementById("loginBtn").innerHTML = "Logout";
-        } else {
-            console.log("ikke logget inn med Facebook")
-            document.getElementById("loginpopup").style.visibility = "hidden";
-            document.getElementById("loginBtn").innerHTML = "Login";
-        }
-    });
-    return status;
 }

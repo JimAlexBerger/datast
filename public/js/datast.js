@@ -1,17 +1,15 @@
+var user = {}
 window.onload = function() {
     getdatastFromDatabase()
-    checkFacebookLoginState()
+    //Sjekker om bruker er pålogget via google
     firebase.auth().onAuthStateChanged(function(u) {
         user = u
         if (u) {
-            console.log("Logget inn med Google")
-            console.log(u)
-            document.getElementById("loginBtn").innerHTML = "Logout";
-            document.getElementById("loginpopup").style.visibility = "hidden"
-
+            setLoginMenu("hidden", "Logout")
+            console.log("Logget inn")
         } else {
-            document.getElementById("loginBtn").innerHTML = "Login";
-            console.log("ikke logget inn med Google")
+            console.log("ikke logget inn")
+            setLoginMenu("hidden", "Login")
         }
     });
 
@@ -19,37 +17,49 @@ window.onload = function() {
     document.getElementById("renderBtn").onclick = renderValues;
     document.getElementById("loginBtn").onclick = login;
     document.getElementById("saveBtn").onclick = saveToDatabase;
-    document.getElementById("signinGoogle").onclick = loginWithGoogle
-    document.getElementById("signinFacebook").onclick = loginWithFacebook
+    document.getElementById("signinGoogle").addEventListener('click', function() {
+        loginWithProvider(new firebase.auth.GoogleAuthProvider())
+    });
+    document.getElementById("signinFacebook").addEventListener('click', function() {
+        loginWithProvider(new firebase.auth.FacebookAuthProvider())
+    });
+}
+
+function httpGetAsync(theUrl, callback) {
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+            callback(xmlHttp.responseText);
+    }
+    xmlHttp.open("GET", theUrl, true); // true for asynchronous
+    xmlHttp.send(null);
 }
 
 function saveToDatabase() {
-    if (checkFacebookLoginState() == "connected") {
-
-    } else if (user) {
-        //TODO:
+    if (user.uid) {
         //Henter parametere
         var params = getParams();
         //Henter tiden (Brukes senere for å lagre UTC tid i databasen)
         var d = new Date();
+        //Sjekker om brukeren har skriverettigheter til dette prosjektet
         return firebase.database().ref('users/' + user.uid + "/projects/" + params["id"]).once('value').then(function(snapshot) {
-            //Sjekker om prosjektiden i urlen allerede finnes i prosjektlista
-            //Hvis den gjør det så er det ditt eget prosjekt
             if (snapshot.val()) {
+                //Oppdaterer prosjektet med ny kode
                 firebase.database().ref('projects/' + params["id"]).set({
                     js: javascriptPane.value,
                     html: HTMLPane.value,
                     css: CssPane.value,
                 });
+                //Oppdaterer tiden prosjektet er sist endret
                 firebase.database().ref('users/' + user.uid + "/projects/" + params["id"]).set({
                     lastUpdated: new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()).toString(),
                 });
             }
-            //Finnes ikke fra før
+            //Hvis prosjektet ikke er i lista til brukeren
             else {
                 //Genererer en unik nøkkel
                 var key = firebase.database().ref('projects/').push().key
-                //Sjekker om noen andre eier prosjektet
+                //Sjekker om noen andre eier prosjektIDen som er i urlen
                 return firebase.database().ref('projects/' + params["id"]).once('value').then(function(snapshot) {
                     //hvis de gjør det blir de lagt til som author av prosjektet
                     if (snapshot.val()) {
@@ -69,11 +79,12 @@ function saveToDatabase() {
                             originalAuthor: user.displayName
                         });
                     }
+                    firebase.database().ref('users/' + user.uid + "/projects/" + key).set({
+                        created: new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()).toString()
+                    });
+                    console.log("WHAT??!")
+                    window.location.replace("https://datast-24d32.firebaseapp.com/?id=" + key)
                 });
-                firebase.database().ref('users/' + user.uid + "/projects/" + key).set({
-                    created: new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()).toString()
-                });
-                window.location.replace("https://datast-24d32.firebaseapp.com/?id=" + key)
             }
         });
     } else {
@@ -93,30 +104,14 @@ function getdatastFromDatabase() {
 }
 
 function login() {
-    //TODO:
-    //Sjekk hvilken måte brukeren er logget inn på (Facebook, Google, gitub osv)
-    //Sjekker om bruker er logget på faebook
-    if (checkFacebookLoginState() == "connected") {
-        FB.logout(function(response) {
-            document.getElementById("loginpopup").style.visibility = "hidden"
-            document.getElementById("loginBtn").innerHTML = "Login";
-        });
+    //Hvis bruker er pålogget
+    if (user) {
+        firebase.auth().signOut();
+        setLoginMenu("hidden", "Logout")
     }
-    //Sjekker om bruker er logget på med google
-    else if (user) {
-        firebase.auth().signOut().then(function() {
-            document.getElementById("loginpopup").style.visibility = "hidden"
-            document.getElementById("loginBtn").innerHTML = "Login";
-        }).catch(function(error) {
-            console.warn("feil ved utlogging")
-            console.log(error)
-        });
-    }
-    //Bruker er ikke logget på
-    else {
-        document.getElementById("loginBtn").innerHTML = "Login";
-        document.getElementById("loginpopup").style.visibility = "visible"
-    }
+    //Hvis bruker ikke er pålogget
+    else
+        setLoginMenu("visible", "Login")
 }
 
 function getParams() {
@@ -142,4 +137,9 @@ function getParams() {
     }
     //Returnerer parameters objektet
     return parameters
+}
+
+function setLoginMenu(visibility, loginButtonText) {
+    document.getElementById("loginBtn").innerHTML = loginButtonText;
+    document.getElementById("loginpopup").style.visibility = visibility
 }
