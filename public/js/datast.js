@@ -1,24 +1,25 @@
 window.onload = function() {
-
-    //Setup loginbutton text
+    checkFacebookLoginState()
     firebase.auth().onAuthStateChanged(function(u) {
-        //The u argument conatins information about the user
         user = u
-      if (u) {
-          console.log(u)
-          document.getElementById("loginBtn").innerHTML = "Logg ut";
-      } else {
-          document.getElementById("loginBtn").innerHTML = "Logg inn";
+        if (u) {
+            console.log("Logget inn med Google")
+            console.log(u)
+            document.getElementById("loginBtn").innerHTML = "Logout";
+            document.getElementById("loginpopup").style.visibility = "hidden"
 
-          console.log("ikke logget inn")
-          console.log(u)
-      }
+        } else {
+            document.getElementById("loginBtn").innerHTML = "Login";
+            console.log("ikke logget inn med Google")
+        }
     });
 
     //onclick for buttons
     document.getElementById("renderBtn").onclick = render;
     document.getElementById("loginBtn").onclick = login;
     document.getElementById("saveBtn").onclick = saveToDatabase;
+    document.getElementById("signinGoogle").onclick = loginWithGoogle
+    document.getElementById("signinFacebook").onclick = loginWithFacebook
 }
 
 function saveToDatabase() {
@@ -26,14 +27,21 @@ function saveToDatabase() {
 }
 
 function login() {
+    //TODO:
+    //Sjekk hvilken måte brukeren er logget inn på (Facebook, Google, gitub osv)
+
+    if (checkFacebookLoginState()) {
+        FB.logout(function(response) {
+            console.log(response)
+        });
+    }
     if (user) {
-        firebase.auth().signOut().then(function() {
-        }).catch(function(error) {
+        firebase.auth().signOut().then(function() {}).catch(function(error) {
             console.warn("feil ved utlogging")
             console.log(error)
         });
     } else {
-        loginWithGoogle()
+        document.getElementById("loginpopup").style.visibility = "visible"
     }
 }
 
