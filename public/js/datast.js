@@ -24,21 +24,39 @@ window.onload = function() {
 }
 
 function saveToDatabase() {
-    if (checkFacebookLoginState() =="connected") {
+    if (checkFacebookLoginState() == "connected") {
 
     } else if (user) {
         //TODO:
-            var d = new Date();
-            var key = firebase.database().ref('projects/').push().key
-            firebase.database().ref('projects/' + key).set({
-                js: javascriptPane.value,
-                html: HTMLPane.value,
-                css: CssPane.value
-            });
-            firebase.database().ref('users/' + user.uid + "/projects/" + key).set({
-                lastUpdated: new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()).toString()
-            });
-            window.location.replace("https://datast-24d32.firebaseapp.com/?id="+key)
+        //Henter parametere
+        var params = getParams();
+        //Henter tiden (Brukes senere for å lagre UTC tid i databasen)
+        var d = new Date();
+        //Sjekker om prosjektiden i urlen allerede finnes i prosjektlista
+        //Hvis den gjør det så er det ditt eget prosjekt
+        return firebase.database().ref('users/' + user.uid + "/projects/" + params["id"]).once('value').then(function(snapshot) {
+            if (snapshot.val()) {
+                firebase.database().ref('projects/' + params["id"]).set({
+                    js: javascriptPane.value,
+                    html: HTMLPane.value,
+                    css: CssPane.value
+                });
+                firebase.database().ref('users/' + user.uid + "/projects/" + params["id"]).set({
+                    lastUpdated: new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()).toString()
+                });
+            } else {
+                var key = firebase.database().ref('projects/').push().key
+                firebase.database().ref('projects/' + key).set({
+                    js: javascriptPane.value,
+                    html: HTMLPane.value,
+                    css: CssPane.value
+                });
+                firebase.database().ref('users/' + user.uid + "/projects/" + key).set({
+                    created: new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()).toString()
+                });
+                window.location.replace("https://datast-24d32.firebaseapp.com/?id=" + key)
+            }
+        });
     } else {
         alert("You have to be logged in to save")
     }
@@ -47,7 +65,7 @@ function saveToDatabase() {
 function getdatastFromDatabase() {
     var params = getParams()
     return firebase.database().ref('projects/' + params["id"]).once('value').then(function(snapshot) {
-        if(snapshot.val()) {
+        if (snapshot.val()) {
             javascriptPane.value = snapshot.val().js
             HTMLPane.value = snapshot.val().html
             CssPane.value = snapshot.val().css
