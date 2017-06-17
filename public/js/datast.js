@@ -32,24 +32,43 @@ function saveToDatabase() {
         var params = getParams();
         //Henter tiden (Brukes senere for å lagre UTC tid i databasen)
         var d = new Date();
-        //Sjekker om prosjektiden i urlen allerede finnes i prosjektlista
-        //Hvis den gjør det så er det ditt eget prosjekt
         return firebase.database().ref('users/' + user.uid + "/projects/" + params["id"]).once('value').then(function(snapshot) {
+            //Sjekker om prosjektiden i urlen allerede finnes i prosjektlista
+            //Hvis den gjør det så er det ditt eget prosjekt
             if (snapshot.val()) {
                 firebase.database().ref('projects/' + params["id"]).set({
                     js: javascriptPane.value,
                     html: HTMLPane.value,
-                    css: CssPane.value
+                    css: CssPane.value,
                 });
                 firebase.database().ref('users/' + user.uid + "/projects/" + params["id"]).set({
-                    lastUpdated: new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()).toString()
+                    lastUpdated: new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()).toString(),
                 });
-            } else {
+            }
+            //Finnes ikke fra før
+            else {
+                //Genererer en unik nøkkel
                 var key = firebase.database().ref('projects/').push().key
-                firebase.database().ref('projects/' + key).set({
-                    js: javascriptPane.value,
-                    html: HTMLPane.value,
-                    css: CssPane.value
+                //Sjekker om noen andre eier prosjektet
+                return firebase.database().ref('projects/' + params["id"]).once('value').then(function(snapshot) {
+                    //hvis de gjør det blir de lagt til som author av prosjektet
+                    if (snapshot.val()) {
+                        firebase.database().ref('projects/' + key).set({
+                            js: javascriptPane.value,
+                            html: HTMLPane.value,
+                            css: CssPane.value,
+                            originalAuthor: snapshot.val().author
+                        });
+                    }
+                    //Hvis ingen andre eier prosjektiden blir brukeren lagt til som originalAuthor
+                    else {
+                        firebase.database().ref('projects/' + key).set({
+                            js: javascriptPane.value,
+                            html: HTMLPane.value,
+                            css: CssPane.value,
+                            originalAuthor: user.displayName
+                        });
+                    }
                 });
                 firebase.database().ref('users/' + user.uid + "/projects/" + key).set({
                     created: new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()).toString()
