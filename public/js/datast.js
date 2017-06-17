@@ -1,7 +1,7 @@
 var user = {}
 var liveID;
 window.onload = function() {
-     liveID = firebase.database().ref('projects/').push().key
+    liveID = firebase.database().ref('projects/').push().key
 
     getdatastFromDatabase()
     //Sjekker om bruker er pålogget via google
@@ -32,19 +32,26 @@ window.onload = function() {
 function toggleLive() {
     var params = getParams()
     var db = firebase.database()
-    db.ref('projects/' + params["id"]).once('value').then(function(snapshot){
+    db.ref('projects/' + params["id"]).once('value').then(function(snapshot) {
         //Hvis prosjektet finnes
         if (snapshot.val()) {
-            if(!snapshot.val().liveID) {
+            if (!snapshot.val().liveID) {
                 db.ref('projects/' + params["id"]).set({
                     js: javascriptPane.value,
                     html: HTMLPane.value,
                     css: CssPane.value,
                     liveID: liveID
                 });
-            }
-            else {
-                db.ref('projects/' + params["id"] + "/liveID").remove()
+                document.getElementById("live").innerHTML = "Live koding: on";
+                document.getElementById("live").style.color = "green";
+                //TODO: Legg til event listener i databasen
+                //TODO: Legg til event listener på inputboksene (en for hver? mindre data å pushe for hver gang?)
+            } else {
+                db.ref('projects/' + params["id"] + "/liveID").remove();
+                document.getElementById("live").innerHTML = "Live koding: off";
+                document.getElementById("live").style.color = "red";
+                //TODO: Fjern event listener i databasen
+                //TODO: Fjern event listener for inputboksene
             }
         }
     })
@@ -85,7 +92,7 @@ function saveToDatabase() {
                 //Genererer en unik nøkkel
                 var key = firebase.database().ref('projects/').push().key
                 //Sjekker om noen andre eier prosjektIDen som er i urlen
-                return firebase.database().ref('projects/' + params["id"]).once('value').then(function(snapshot) {
+                firebase.database().ref('projects/' + params["id"]).once('value').then(function(snapshot) {
                     //hvis de gjør det blir de lagt til som author av prosjektet
                     if (snapshot.val()) {
                         firebase.database().ref('projects/' + key).set({
@@ -124,6 +131,10 @@ function getdatastFromDatabase() {
             javascriptPane.value = snapshot.val().js
             HTMLPane.value = snapshot.val().html
             CssPane.value = snapshot.val().css
+            if (snapshot.val().liveID) {
+                document.getElementById("live").innerHTML = "Live koding: on";
+                document.getElementById("live").style.color = "green";
+            }
         }
     });
 }
@@ -164,6 +175,38 @@ function getParams() {
     return parameters
 }
 
+function getElement(selector) {
+    if (selector.substring(0, 1) == "#")
+        return document.getElementById(selector.substring(1))
+    if (selector.substring(0, 1) == ".")
+        return document.getElementsByClassName(selector.substring(1))
+    else
+        return document.getElementsByTagName(selector)
+}
+
+function setHTML(selector, text) {
+    var element = getElement(selector)
+    if (element.length) {
+        for (var i = 0; i < element.length; i++) {
+            element[i].innerHTML = text;
+        }
+    } else {
+        element.innerHTML = text;
+    }
+}
+function setCSS(selector, property, value) {
+    var element = getElement(selector)
+    if (element.length) {
+        for (var i = 0; i < element.length; i++) {
+            element[i].style[property] = value;
+        }
+    } else {
+        element.style[property] = value;
+    }
+}
+
+//TODO: denne metoden kan byttes ut med setHTML og setCSS
+//hvis dere gidder å bytte de stedene den blir brukt
 function setLoginMenu(visibility, loginButtonText) {
     document.getElementById("loginBtn").innerHTML = loginButtonText;
     document.getElementById("loginpopup").style.visibility = visibility
