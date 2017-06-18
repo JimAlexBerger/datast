@@ -146,13 +146,7 @@ function getDatastFromDatabase() {
             stopListeningLive()
         }
     });
-    //Sjekker om bruker eier prosjektet
-    firebase.database().ref('users/' + user.uid).once('value').child(params["id"]).then(function(snapshot) {
-        //Hvis prosjektet finnes, er det brukeren sitt
-        if (snapshot.val()) {
-            //Det er brukerens prosjekt
-        }
-    });
+    //TODO: Sjekk om bruker eier prosjektet
 }
 
 //Tidemann skal fikse her, har skrevet sudokode
