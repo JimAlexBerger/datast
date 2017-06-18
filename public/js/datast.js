@@ -1,18 +1,29 @@
+//Globale variabler
 var user = {}
-var liveID;
+var liveID, params;
+//Oppstartsfunksjon
 window.onload = function() {
     liveID = firebase.database().ref('projects/').push().key
-
-    getdatastFromDatabase()
+    params = getParams()
+    getDatastFromDatabase()
     //Sjekker om bruker er pålogget via google
     firebase.auth().onAuthStateChanged(function(u) {
         user = u
         if (u) {
-            setLoginMenu("hidden", "Logout")
+            setHTML("#loginBtn","Logout")
+            setCSS("#loginpopup","visibility","hidden")
             console.log("Logget inn")
+            setHTML("#info","Logget inn som " + u.displayName)
+            setCSS("#pic","visibility","visible")
+            setCSS("#pic","height","100px")
+            setCSS("#pic","width","100px")
+            getElement("#pic").src = u.photoURL
         } else {
+            setCSS("#pic","visibility","hidden")
+            setHTML("#info","")
             console.log("ikke logget inn")
-            setLoginMenu("hidden", "Login")
+            setHTML("#loginBtn","Login")
+            setCSS("#loginpopup","visibility","hidden")
         }
     });
 
@@ -29,29 +40,22 @@ window.onload = function() {
     });
 }
 
+//Bruker trykker på toggle live knapper
+//Tidemann skal fikse her, har skrevet sudokode
 function toggleLive() {
-    var params = getParams()
     var db = firebase.database()
     db.ref('projects/' + params["id"]).once('value').then(function(snapshot) {
-        //Hvis prosjektet finnes
+        //Hvis prosjektet eksisterer
         if (snapshot.val()) {
+            //Hvis det ikke finnes noe liveID for prosjektet
             if (!snapshot.val().liveID) {
-                db.ref('projects/' + params["id"]).set({
-                    js: javascriptPane.value,
-                    html: HTMLPane.value,
-                    css: CssPane.value,
-                    liveID: liveID
-                });
-                document.getElementById("live").innerHTML = "Live koding: on";
-                document.getElementById("live").style.color = "green";
-                //TODO: Legg til event listener i databasen
-                //TODO: Legg til event listener på inputboksene (en for hver? mindre data å pushe for hver gang?)
+                update = {}
+                update['projects/' + params["id"] + "/liveID"] = liveID
+                firebase.database().ref().update(update);
+                listenLive()
             } else {
                 db.ref('projects/' + params["id"] + "/liveID").remove();
-                document.getElementById("live").innerHTML = "Live koding: off";
-                document.getElementById("live").style.color = "red";
-                //TODO: Fjern event listener i databasen
-                //TODO: Fjern event listener for inputboksene
+                stopListeningLive()
             }
         }
     })
@@ -66,11 +70,9 @@ function httpGetAsync(theUrl, callback) {
     xmlHttp.open("GET", theUrl, true); // true for asynchronous
     xmlHttp.send(null);
 }
-
+//Bruker trykker på save (Brukes ved manuell lagring)
 function saveToDatabase() {
     if (user.uid) {
-        //Henter parametere
-        var params = getParams();
         //Henter tiden (Brukes senere for å lagre UTC tid i databasen)
         var d = new Date();
         //Sjekker om brukeren har skriverettigheter til dette prosjektet
@@ -114,8 +116,7 @@ function saveToDatabase() {
                     firebase.database().ref('users/' + user.uid + "/projects/" + key).set({
                         created: new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()).toString()
                     });
-                    console.log("WHAT??!")
-                    window.location.replace("https://datast-24d32.firebaseapp.com/?id=" + key)
+                    window.location.replace(getURL() + "?id=" + key)
                 });
             }
         });
@@ -124,32 +125,104 @@ function saveToDatabase() {
     }
 }
 
-function getdatastFromDatabase() {
-    var params = getParams()
-    return firebase.database().ref('projects/' + params["id"]).once('value').then(function(snapshot) {
+//Henter ut info fra database ved oppstart
+//Tidemann skal fikse her, har skrevet sudokode
+function getDatastFromDatabase() {
+    firebase.database().ref('projects/' + params["id"]).once('value').then(function(snapshot) {
+        //Sjekker om prosjektet eksisterer
         if (snapshot.val()) {
+            //henter ut verdiene fra databasen og oppdaterer inputboksene
             javascriptPane.value = snapshot.val().js
             HTMLPane.value = snapshot.val().html
             CssPane.value = snapshot.val().css
-            if (snapshot.val().liveID) {
-                document.getElementById("live").innerHTML = "Live koding: on";
-                document.getElementById("live").style.color = "green";
+            //Sjekker om du har liveID i uren
+            if (snapshot.val().liveID == params["liveID"]) {
+                listenLive()
             }
+            else {
+                stopListeningLive()
+            }
+        } else {
+            stopListeningLive()
+        }
+    });
+    //Sjekker om bruker eier prosjektet
+    firebase.database().ref('users/' + user.uid).once('value').child(params["id"]).then(function(snapshot) {
+        //Hvis prosjektet finnes, er det brukeren sitt
+        if (snapshot.val()) {
+            //Det er brukerens prosjekt
         }
     });
 }
 
+//Tidemann skal fikse her, har skrevet sudokode
+function listenLive() {
+    if (!params["liveID"] == liveID)
+        window.location.replace(getURL() + "?id=" + key + "&liveID=" + liveID)
+    setHTML("#live", "Live coding: on")
+    setCSS("#live", "color", "green")
+    //TODO: Sjekk om bruker har tilgang til live session
+    firebase.database().ref('projects/' + params["id"] + "/liveID").on('value', function(snapshot) {
+        if (snapshot.val() == params["liveID"] || snapshot.val() == liveID) {
+            firebase.database().ref('projects/' + params["id"] + "/css").on('value', function(snapshot) {
+                CssPane.value = snapshot.val()
+            })
+            firebase.database().ref('projects/' + params["id"] + "/html").on('value', function(snapshot) {
+                HTMLPane.value = snapshot.val()
+            })
+            firebase.database().ref('projects/' + params["id"] + "/js").on('value', function(snapshot) {
+                javascriptPane.value = snapshot.val()
+            })
+        } else {
+            stopListeningLive()
+        }
+    })
+    CssPane.onkeyup = function() {
+        update = {}
+        update['projects/' + params["id"] + "/css"] = CssPane.value
+        firebase.database().ref().update(update);
+    }
+    HTMLPane.onkeyup = function() {
+        update = {}
+        update['projects/' + params["id"] + "/html"] = HTMLPane.value
+
+        firebase.database().ref().update(update);
+    }
+    javascriptPane.onkeyup = function() {
+        update = {}
+        update['projects/' + params["id"] + "/js"] = javascriptPane.value
+        firebase.database().ref().update(update);
+    }
+}
+
+//Tidemann skal fikse her, har skrevet sudokode
+function stopListeningLive() {
+    setHTML("#live", "Live coding: off")
+    setCSS("#live", "color", "red")
+    CssPane.onkeyup = null;
+    HTMLPane.onkeyup = null;
+    javascriptPane.onkeyup = null;
+
+    firebase.database().ref('projects/' + params["id"] + "/css").off()
+    firebase.database().ref('projects/' + params["id"] + "/html").off()
+    firebase.database().ref('projects/' + params["id"] + "/js").off()
+}
+
+//Funksjon for loginknappen
 function login() {
     //Hvis bruker er pålogget
     if (user) {
         firebase.auth().signOut();
-        setLoginMenu("hidden", "Logout")
+        setHTML("#loginBtn","Logout")
+        setCSS("#loginpopup","visibility","hidden")
     }
     //Hvis bruker ikke er pålogget
     else
-        setLoginMenu("visible", "Login")
+        setHTML("#loginBtn","Login")
+        setCSS("#loginpopup","visibility","visible")
 }
 
+//Henter ut parametere fra URLen
 function getParams() {
     var parameters = {}
     //Henter url
@@ -175,6 +248,17 @@ function getParams() {
     return parameters
 }
 
+//Midlertidig funksjon slik at vi kan bruke localhost
+function getURL() {
+    var url = window.location.href
+    if (url.indexOf("?") > 0)
+        return url.substring(0, url.indexOf("?"));
+    else
+        return url
+}
+
+
+//Funksjoner for å endre DOM elementer
 function getElement(selector) {
     if (selector.substring(0, 1) == "#")
         return document.getElementById(selector.substring(1))
@@ -183,7 +267,6 @@ function getElement(selector) {
     else
         return document.getElementsByTagName(selector)
 }
-
 function setHTML(selector, text) {
     var element = getElement(selector)
     if (element.length) {
@@ -203,11 +286,4 @@ function setCSS(selector, property, value) {
     } else {
         element.style[property] = value;
     }
-}
-
-//TODO: denne metoden kan byttes ut med setHTML og setCSS
-//hvis dere gidder å bytte de stedene den blir brukt
-function setLoginMenu(visibility, loginButtonText) {
-    document.getElementById("loginBtn").innerHTML = loginButtonText;
-    document.getElementById("loginpopup").style.visibility = visibility
 }
