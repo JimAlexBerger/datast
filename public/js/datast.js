@@ -38,6 +38,12 @@ window.onload = function() {
     document.getElementById("signinFacebook").addEventListener('click', function() {
         loginWithProvider(new firebase.auth.FacebookAuthProvider())
     });
+    document.getElementById("signinGitHub").addEventListener('click', function() {
+        loginWithProvider(new firebase.auth.GithubAuthProvider())
+    });
+
+
+
 }
 
 //Bruker trykker på toggle live knapper
