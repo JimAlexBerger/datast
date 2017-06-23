@@ -69,15 +69,15 @@ window.onload = function() {
     });
 
     datast.js = ace.edit("javascriptPane");
-    datast.js.setTheme("ace/theme/twilight");
+    datast.js.setTheme("ace/theme/dawn");
     datast.js.session.setMode("ace/mode/javascript");
 
     datast.html = ace.edit("HTMLPane");
-    datast.html.setTheme("ace/theme/twilight");
+    datast.html.setTheme("ace/theme/dawn");
     datast.html.session.setMode("ace/mode/html");
 
     datast.css = ace.edit("CssPane");
-    datast.css.setTheme("ace/theme/twilight");
+    datast.css.setTheme("ace/theme/dawn");
     datast.css.session.setMode("ace/mode/css");
 
 }
