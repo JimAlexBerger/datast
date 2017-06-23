@@ -174,9 +174,9 @@ function getDatastFromDatabase() {
         //Sjekker om prosjektet eksisterer
         if (snapshot.val()) {
             //henter ut verdiene fra databasen og oppdaterer inputboksene
-            datast.js.setValue() = snapshot.val().js
-            datast.html.setValue() = snapshot.val().html
-            datast.css.setValue() = snapshot.val().css
+            datast.js.setValue(snapshot.val().js);
+            datast.html.setValue(snapshot.val().html);
+            datast.css.setValue(snapshot.val().css);
             //Sjekker om du har liveID i uren
             if (snapshot.val().liveID == params["liveID"]) {
                 listenLive()
