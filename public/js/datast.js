@@ -1,6 +1,32 @@
+/*Copyright (c) 2010, Ajax.org B.V.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of Ajax.org B.V. nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL AJAX.ORG B.V. BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.*/
+
 //Globale variabler
 var user = {}
 var liveID, params;
+var datast = {js:null,html:null,css:null};
 //Oppstartsfunksjon
 window.onload = function() {
     liveID = firebase.database().ref('projects/').push().key
@@ -10,20 +36,20 @@ window.onload = function() {
     firebase.auth().onAuthStateChanged(function(u) {
         user = u
         if (u) {
-            setHTML("#loginBtn","Logout")
-            setCSS("#loginpopup","visibility","hidden")
+            setHTML("#loginBtn", "Logout")
+            setCSS("#loginpopup", "visibility", "hidden")
             console.log("Logget inn")
-            setHTML("#info","Logget inn som " + u.displayName)
-            setCSS("#pic","visibility","visible")
-            setCSS("#pic","height","100px")
-            setCSS("#pic","width","100px")
+            setHTML("#info", "Logget inn som " + u.displayName)
+            setCSS("#pic", "visibility", "visible")
+            setCSS("#pic", "height", "100px")
+            setCSS("#pic", "width", "100px")
             getElement("#pic").src = u.photoURL
         } else {
-            setCSS("#pic","visibility","hidden")
-            setHTML("#info","")
+            setCSS("#pic", "visibility", "hidden")
+            setHTML("#info", "")
             console.log("ikke logget inn")
-            setHTML("#loginBtn","Login")
-            setCSS("#loginpopup","visibility","hidden")
+            setHTML("#loginBtn", "Login")
+            setCSS("#loginpopup", "visibility", "hidden")
         }
     });
 
@@ -42,7 +68,17 @@ window.onload = function() {
         loginWithProvider(new firebase.auth.GithubAuthProvider())
     });
 
+    datast.js = ace.edit("javascriptPane");
+    datast.js.setTheme("ace/theme/twilight");
+    datast.js.session.setMode("ace/mode/javascript");
 
+    datast.html = ace.edit("HTMLPane");
+    datast.html.setTheme("ace/theme/twilight");
+    datast.html.session.setMode("ace/mode/html");
+
+    datast.css = ace.edit("CssPane");
+    datast.css.setTheme("ace/theme/twilight");
+    datast.css.session.setMode("ace/mode/css");
 
 }
 
@@ -86,9 +122,9 @@ function saveToDatabase() {
             if (snapshot.val()) {
                 //Oppdaterer prosjektet med ny kode
                 firebase.database().ref('projects/' + params["id"]).set({
-                    js: javascriptPane.value,
-                    html: HTMLPane.value,
-                    css: CssPane.value,
+                    js: datast.js.getValue(),
+                    html: datast.html.getValue(),
+                    css: datast.css.getValue(),
                 });
                 //Oppdaterer tiden prosjektet er sist endret
                 firebase.database().ref('users/' + user.uid + "/projects/" + params["id"]).set({
@@ -104,18 +140,18 @@ function saveToDatabase() {
                     //hvis de gjør det blir de lagt til som author av prosjektet
                     if (snapshot.val()) {
                         firebase.database().ref('projects/' + key).set({
-                            js: javascriptPane.value,
-                            html: HTMLPane.value,
-                            css: CssPane.value,
+                            js: datast.js.getValue(),
+                            html: datast.html.getValue(),
+                            css: datast.css.getValue(),
                             originalAuthor: snapshot.val().author
                         });
                     }
                     //Hvis ingen andre eier prosjektiden blir brukeren lagt til som originalAuthor
                     else {
                         firebase.database().ref('projects/' + key).set({
-                            js: javascriptPane.value,
-                            html: HTMLPane.value,
-                            css: CssPane.value,
+                            js: datast.js.getValue(),
+                            html: datast.html.getValue(),
+                            css: datast.css.getValue(),
                             originalAuthor: user.displayName
                         });
                     }
@@ -138,14 +174,13 @@ function getDatastFromDatabase() {
         //Sjekker om prosjektet eksisterer
         if (snapshot.val()) {
             //henter ut verdiene fra databasen og oppdaterer inputboksene
-            javascriptPane.value = snapshot.val().js
-            HTMLPane.value = snapshot.val().html
-            CssPane.value = snapshot.val().css
+            datast.js.setValue() = snapshot.val().js
+            datast.html.setValue() = snapshot.val().html
+            datast.css.setValue() = snapshot.val().css
             //Sjekker om du har liveID i uren
             if (snapshot.val().liveID == params["liveID"]) {
                 listenLive()
-            }
-            else {
+            } else {
                 stopListeningLive()
             }
         } else {
@@ -156,6 +191,7 @@ function getDatastFromDatabase() {
 }
 
 //Tidemann skal fikse her, har skrevet sudokode
+// okei, men datast.js.setValue() / datast.js.getValue() er nye get og set på boksene
 function listenLive() {
     if (!params["liveID"] == liveID)
         window.location.replace(getURL() + "?id=" + key + "&liveID=" + liveID)
@@ -213,13 +249,13 @@ function login() {
     //Hvis bruker er pålogget
     if (user) {
         firebase.auth().signOut();
-        setHTML("#loginBtn","Logout")
-        setCSS("#loginpopup","visibility","hidden")
+        setHTML("#loginBtn", "Logout")
+        setCSS("#loginpopup", "visibility", "hidden")
     }
     //Hvis bruker ikke er pålogget
     else
-        setHTML("#loginBtn","Login")
-        setCSS("#loginpopup","visibility","visible")
+        setHTML("#loginBtn", "Login")
+    setCSS("#loginpopup", "visibility", "visible")
 }
 
 //Henter ut parametere fra URLen
@@ -267,6 +303,7 @@ function getElement(selector) {
     else
         return document.getElementsByTagName(selector)
 }
+
 function setHTML(selector, text) {
     var element = getElement(selector)
     if (element.length) {
@@ -277,6 +314,7 @@ function setHTML(selector, text) {
         element.innerHTML = text;
     }
 }
+
 function setCSS(selector, property, value) {
     var element = getElement(selector)
     if (element.length) {

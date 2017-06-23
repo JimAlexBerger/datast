@@ -2,97 +2,101 @@
 <html>
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="google-signin-clientid" content="671327180228-pj2f6v5imjaibgbfhj748u3nq01jieqh.apps.googleusercontent.com">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="google-signin-clientid" content="671327180228-pj2f6v5imjaibgbfhj748u3nq01jieqh.apps.googleusercontent.com">
 
-  <title>datast</title>
+    <title>datast</title>
 
-  <!-- CSS -->
-  <link type="text/css" rel="stylesheet" href="css/indexStyle.css" />
+    <!-- CSS -->
+    <link type="text/css" rel="stylesheet" href="css/indexStyle.css" />
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/4.1.2/firebase.js"></script>
-  <!-- update the version number as needed -->
-  <script defer src="/__/firebase/4.1.2/firebase-app.js"></script>
-  <!-- include only the Firebase features as you need -->
-  <script defer src="/__/firebase/4.1.2/firebase-auth.js"></script>
-  <script defer src="/__/firebase/4.1.2/firebase-database.js"></script>
-  <!-- <script defer src="/__/firebase/4.1.2/firebase-messaging.js"></script> -->
-  <!-- <script defer src="/__/firebase/4.1.2/firebase-storage.js"></script> -->
-  <!-- initialize the SDK after all desired features are loaded -->
-  <script defer src="/__/firebase/init.js"></script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/4.1.2/firebase.js"></script>
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/4.1.2/firebase-app.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/4.1.2/firebase-auth.js"></script>
+    <script defer src="/__/firebase/4.1.2/firebase-database.js"></script>
+    <!-- <script defer src="/__/firebase/4.1.2/firebase-messaging.js"></script> -->
+    <!-- <script defer src="/__/firebase/4.1.2/firebase-storage.js"></script> -->
+    <!-- initialize the SDK after all desired features are loaded -->
+    <script defer src="/__/firebase/init.js"></script>
+    <!-- ACE -->
+    <script src="js/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+    <!-- Egne JS filer -->
+    <script src="js/Authentication.js"></script>
+    <script src="js/datast.js"></script>
+    <script src="js/render.js"></script>
 
-  <!-- Egne JS filer -->
-<!--  <script src="js/firebaseInit.js"></script> -->
-  <script src="js/Authentication.js"></script>
-  <script src="js/datast.js"></script>
-  <script src="js/render.js"></script>
-  <!-- firebase.auth().signInWithRedirect(provider) -->
-  <!-- firebase.auth().signInWithPopup(provider) -->
 
-  </script>
+    </script>
 
 
 </head>
 
 <body>
-  <script>
-    (function(d, s, id) {
-      var js, fjs = d.getElementsByTagName(s)[0];
-      if (d.getElementById(id)) return;
-      js = d.createElement(s);
-      js.id = id;
-      js.src = "//connect.facebook.net/nb_NO/sdk.js#xfbml=1&version=v2.9&appId=111106169499288";
-      fjs.parentNode.insertBefore(js, fjs);
-    }(document, 'script', 'facebook-jssdk'));
-  </script>
+    <script>
+        (function(d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) return;
+            js = d.createElement(s);
+            js.id = id;
+            js.src = "//connect.facebook.net/nb_NO/sdk.js#xfbml=1&version=v2.9&appId=111106169499288";
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
+    </script>
 
-  <div id="status">
-  </div>
-  <div id="container">
-    <span id="info"></span>
-    <img id="pic">
-    <button id="loginBtn">Login</button>
-    <button id="renderBtn">Render</button>
-    <button id="saveBtn">Save</button>
-    <button id="live">Live koding</button>
+    <div id="status">
+    </div>
+    <div id="container">
+        <span id="info"></span>
+        <img id="pic">
+        <button id="loginBtn">Login</button>
+        <button id="renderBtn">Render</button>
+        <button id="saveBtn">Save</button>
+        <button id="live">Live koding</button>
 
 
-    <textarea class="TextPane" id="javascriptPane" placeholder="JS"></textarea>
-    <textarea class="TextPane" id="HTMLPane" placeholder="HTML"></textarea>
-    <textarea class="TextPane" id="CssPane" placeholder="CSS"></textarea>
-    <iframe id="OutputPane"></iframe>
-  </div>
-  <div id="loginpopup">
-    <button type="button" id="signinGoogle" scope="public_profile,email" class="loginButtons"name="Google">Login with Google</button>
-    <button type="button" id="signinFacebook" class="loginButtons" name="Facebook">Login with Facebook</button>
-    <button type="button" id="signinGitHub" class="loginButtons" name="GitHub">Login with GitHub</button>
+        <!--<textarea class="TextPane" id="javascriptPane" placeholder="JS"></textarea>-->
+        <!--<textarea class="TextPane" id="HTMLPane" placeholder="HTML"></textarea>-->
+        <!--<textarea class="TextPane" id="CssPane" placeholder="CSS"></textarea>-->
+        <pre id="HTMLPane" class="TextPane"></pre>
+        <pre id="javascriptPane" class="TextPane"></pre>
+        <pre id="CssPane" class="TextPane"></pre>
+        <iframe id="OutputPane"></iframe>
+    </div>
+    <div id="loginpopup">
+        <button type="button" id="signinGoogle" scope="public_profile,email" class="loginButtons" name="Google">Login with Google</button>
+        <button type="button" id="signinFacebook" class="loginButtons" name="Facebook">Login with Facebook</button>
+        <button type="button" id="signinGitHub" class="loginButtons" name="GitHub">Login with GitHub</button>
 
-    <div id="loginWithGoogle"></div>
-  </div>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-      // // The Firebase SDK is initialized and available here!
-      //
-      // firebase.auth().onAuthStateChanged(user => { });
-      // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
-      // firebase.messaging().requestPermission().then(() => { });
-      // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
-      //
-      // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+        <div id="loginWithGoogle"></div>
+    </div>
 
-      try {
-        let app = firebase.app();
-        let features = ['auth', 'database', 'messaging', 'storage'].filter(feature => typeof app[feature] === 'function');
-        //document.getElementById('load').innerHTML = `Firebase SDK loaded with ${features.join(', ')}`;
-      } catch (e) {
-        console.error(e);
-        //document.getElementById('load').innerHTML = 'Error loading the Firebase SDK, check the console.';
-      }
-    });
-  </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+            // // The Firebase SDK is initialized and available here!
+            //
+            // firebase.auth().onAuthStateChanged(user => { });
+            // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
+            // firebase.messaging().requestPermission().then(() => { });
+            // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
+            //
+            // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+
+            try {
+                let app = firebase.app();
+                let features = ['auth', 'database', 'messaging', 'storage'].filter(feature => typeof app[feature] === 'function');
+                //document.getElementById('load').innerHTML = `Firebase SDK loaded with ${features.join(', ')}`;
+            } catch (e) {
+                console.error(e);
+                //document.getElementById('load').innerHTML = 'Error loading the Firebase SDK, check the console.';
+            }
+        });
+    </script>
 </body>
 
 </html>

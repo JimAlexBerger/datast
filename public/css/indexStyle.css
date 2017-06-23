@@ -1,7 +1,12 @@
 .TextPane{
-    background-color: #ccc;
     display: inline-block;
     width: 25%;
+    height: 300px;
+}
+
+#editor {
+    margin: 0;
+    width:25%;
     height: 300px;
 }
 
