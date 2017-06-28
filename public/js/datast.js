@@ -67,7 +67,9 @@ window.onload = function() {
     document.getElementById("signinGitHub").addEventListener('click', function() {
         loginWithProvider(new firebase.auth.GithubAuthProvider())
     });
-
+    document.getElementById("signinTwitter").addEventListener('click', function() {
+        loginWithProvider(new firebase.auth.TwitterAuthProvider())
+    });
     datast.js = ace.edit("javascriptPane");
     datast.js.setTheme("ace/theme/dawn");
     datast.js.session.setMode("ace/mode/javascript");
