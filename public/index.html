@@ -49,22 +49,25 @@
 
     <div id="status">
     </div>
-    <div id="container">
-        <span id="info"></span>
-        <img id="pic">
-        <button id="loginBtn">Login</button>
-        <button id="renderBtn">Render</button>
-        <button id="saveBtn">Save</button>
-        <button id="live">Live koding</button>
-
+    <div id="content">
+        <div id="menu">
+            <span id="info"></span>
+            <img id="pic">
+            <button id="loginBtn">Login</button>
+            <button id="renderBtn">Render</button>
+            <button id="saveBtn">Save</button>
+            <button id="live">Live koding</button>
+        </div>
 
         <!--<textarea class="TextPane" id="javascriptPane" placeholder="JS"></textarea>-->
         <!--<textarea class="TextPane" id="HTMLPane" placeholder="HTML"></textarea>-->
         <!--<textarea class="TextPane" id="CssPane" placeholder="CSS"></textarea>-->
-        <pre id="HTMLPane" class="TextPane"></pre>
-        <pre id="javascriptPane" class="TextPane"></pre>
-        <pre id="CssPane" class="TextPane"></pre>
-        <iframe id="OutputPane"></iframe>
+        <div id="panes">
+            <pre id="HTMLPane" class="TextPane"></pre>
+            <pre id="javascriptPane" class="TextPane"></pre>
+            <pre id="CssPane" class="TextPane"></pre>
+            <iframe id="OutputPane"></iframe>
+        </div>
     </div>
     <div id="loginpopup">
         <button type="button" id="signinGoogle" scope="public_profile,email" class="loginButtons" name="Google">Login with Google</button>

@@ -1,39 +1,73 @@
-.TextPane{
-    display: inline-block;
+
+#panes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 40vh);
+    grid-template-areas:
+    "JS HTML"
+    "CSS OUT";
+    justify-items: center;
+}
+
+#menu {
+    height: 15vh;
+    background-color: cornflowerblue;
+}
+
+#HTMLPane {
+    grid-area: HTML;
+}
+
+#javascriptPane {
+    grid-area: JS;
+}
+
+#CssPane {
+    grid-area: CSS;
+}
+
+#OutputPane {
+    grid-area: OUT;
+}
+
+
+#editor {
+    margin: 0;
     width: 25%;
     height: 300px;
 }
 
-#editor {
-    margin: 0;
-    width:25%;
-    height: 300px;
+.TextPane {
+    display: inline-block;
+    width: 95%;
+    height: 95%;
 }
 
 #OutputPane {
-    width: 100%;
-    height: 300px;
+    width: 95%;
+    height: 95%;
 }
 
 #loginpopup {
-  visibility: hidden;
-  position: absolute;
-  display: flex;
-  top: 5vh;
-  right: 0;
-  left: 0;
-  min-width: 300px;
-  min-height: 400px;
-  background-color: #404040;
-  width: 15vw;
-  height: 50vh;
-  margin: auto;
-  box-shadow: 8px 8px 4px #aaa;
+    visibility: hidden;
+    position: absolute;
+    display: flex;
+    top: 5vh;
+    right: 0;
+    left: 0;
+    min-width: 300px;
+    min-height: 400px;
+    background-color: #404040;
+    width: 15vw;
+    height: 50vh;
+    margin: auto;
+    box-shadow: 8px 8px 4px #aaa;
 }
+
 .loginButtons {
-  position: relative;
-  height: 50px;
-  width: 200px;
-  margin: auto;
-  display: block;
+    position: relative;
+    height: 50px;
+    width: 200px;
+    margin: auto;
+    display: block;
 }
