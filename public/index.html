@@ -5,12 +5,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="google-signin-clientid" content="671327180228-pj2f6v5imjaibgbfhj748u3nq01jieqh.apps.googleusercontent.com">
-
     <title>datast</title>
-
     <!-- CSS -->
     <link type="text/css" rel="stylesheet" href="css/indexStyle.css" />
-
+    <link type="text/css" rel="stylesheet" href="css/toastr.css">
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/4.1.2/firebase.js"></script>
     <!-- update the version number as needed -->
@@ -26,11 +24,9 @@
     <script src="js/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
     <!-- Egne JS filer -->
     <script src="js/Authentication.js"></script>
+    <script src="js/toastr.js"></script>
     <script src="js/datast.js"></script>
     <script src="js/render.js"></script>
-
-
-    </script>
 
 
 </head>
@@ -57,15 +53,13 @@
             <button id="renderBtn">Render</button>
             <button id="saveBtn">Save</button>
             <button id="live">Live koding</button>
+            <button id="settings">Settings</button>
         </div>
 
-        <!--<textarea class="TextPane" id="javascriptPane" placeholder="JS"></textarea>-->
-        <!--<textarea class="TextPane" id="HTMLPane" placeholder="HTML"></textarea>-->
-        <!--<textarea class="TextPane" id="CssPane" placeholder="CSS"></textarea>-->
         <div id="panes">
             <pre id="HTMLPane" class="TextPane"></pre>
-            <pre id="javascriptPane" class="TextPane"></pre>
-            <pre id="CssPane" class="TextPane"></pre>
+            <pre id="javascriptPane" class="TextPane"  placeholder"Javascript"></pre>
+            <pre id="CssPane" class="TextPane"  placeholder"CSS"></pre>
             <iframe id="OutputPane"></iframe>
         </div>
     </div>
@@ -75,22 +69,16 @@
         <button type="button" id="signinGitHub" class="loginButtons" name="GitHub">Login with GitHub</button>
         <button type="button" id="signinTwitter" class="loginButtons" name="GitHub">Login with Twitter</button>
 
-        <div id="loginWithGoogle"></div>
+    </div>
+
+    <div id="settingspopup">
+        <label for="email">email</label>
+        <input type="text" name="email" placeholder="email">
     </div>
 
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-            // // The Firebase SDK is initialized and available here!
-            //
-            // firebase.auth().onAuthStateChanged(user => { });
-            // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
-            // firebase.messaging().requestPermission().then(() => { });
-            // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
-            //
-            // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-
             try {
                 let app = firebase.app();
                 let features = ['auth', 'database', 'messaging', 'storage'].filter(feature => typeof app[feature] === 'function');

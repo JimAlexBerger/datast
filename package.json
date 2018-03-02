@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/JimAlexBerger/datast#readme",
   "dependencies": {
-    "firebase": "^4.1.2"
+    "firebase": "^4.10.1",
+    "firebase-admin": "^5.9.1",
+    "firebase-functions": "^0.8.1"
   }
 }

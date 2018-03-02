@@ -62,8 +62,29 @@
     height: 50vh;
     margin: auto;
     box-shadow: 8px 8px 4px #aaa;
+    z-index: 4;
 }
 
+#settingspopup {
+    visibility: hidden;
+    position: absolute;
+    display: flex;
+    top: 5vh;
+    right: 0;
+    left: 0;
+    min-width: 300px;
+    min-height: 400px;
+    background-color: #404040;
+    width: 15vw;
+    height: 50vh;
+    margin: auto;
+    box-shadow: 8px 8px 4px #aaa;
+    z-index: 5;
+}
+
+#saveBtn {
+    display: none;
+}
 .loginButtons {
     position: relative;
     height: 50px;

@@ -23,53 +23,66 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.*/
 
-//Globale variabler
+//Global variables
 var user = {}
-var liveID, params;
+var params;
 var datast = {js:null,html:null,css:null};
-//Oppstartsfunksjon
+var db;
+var liveCoding = false;
+var projectStatus = -1; //-1 = not ready, 0 = empty project, 1 = owner, 2 = not owner
 window.onload = function() {
-    liveID = firebase.database().ref('projects/').push().key
+    db = firebase.database();
     params = getParams()
-    getDatastFromDatabase()
-    //Sjekker om bruker er pålogget via google
+    getDatastFromDatabase();
+    //Checking if user is logged in
     firebase.auth().onAuthStateChanged(function(u) {
-        user = u
+        user = u;
         if (u) {
             setHTML("#loginBtn", "Logout")
             setCSS("#loginpopup", "visibility", "hidden")
-            console.log("Logget inn")
-            setHTML("#info", "Logget inn som " + u.displayName)
+            console.log("Signed in")
+            setHTML("#info", "Signed in as " + u.displayName)
             setCSS("#pic", "visibility", "visible")
             setCSS("#pic", "height", "100px")
             setCSS("#pic", "width", "100px")
             getElement("#pic").src = u.photoURL
         } else {
+            setCSS("#saveBtn","display","none")
             setCSS("#pic", "visibility", "hidden")
             setHTML("#info", "")
-            console.log("ikke logget inn")
+            console.log("Not logged in")
             setHTML("#loginBtn", "Login")
             setCSS("#loginpopup", "visibility", "hidden")
         }
     });
 
     //onclick for buttons
-    document.getElementById("renderBtn").onclick = renderValues;
-    document.getElementById("loginBtn").onclick = login;
-    document.getElementById("saveBtn").onclick = saveToDatabase;
-    document.getElementById("live").onclick = toggleLive;
-    document.getElementById("signinGoogle").addEventListener('click', function() {
+    getElement("#renderBtn").onclick = renderValues;
+    getElement("#loginBtn").onclick = login
+    getElement("#saveBtn").onclick = saveToDatabase
+    getElement("#live").onclick = toggleLive
+    getElement("#settings").onclick = toggleSettings
+
+    getElement("#signinGoogle").addEventListener('click', function() {
         loginWithProvider(new firebase.auth.GoogleAuthProvider())
     });
-    document.getElementById("signinFacebook").addEventListener('click', function() {
+    getElement("#signinFacebook").addEventListener('click', function() {
         loginWithProvider(new firebase.auth.FacebookAuthProvider())
     });
-    document.getElementById("signinGitHub").addEventListener('click', function() {
+    getElement("#signinGitHub").addEventListener('click', function() {
         loginWithProvider(new firebase.auth.GithubAuthProvider())
     });
-    document.getElementById("signinTwitter").addEventListener('click', function() {
+    getElement("#signinTwitter").addEventListener('click', function() {
         loginWithProvider(new firebase.auth.TwitterAuthProvider())
     });
+
+    //Save to database when ctrl + s is clicked
+    document.addEventListener("keydown", function(e) {
+      if (e.keyCode == 83 && (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)) {
+        e.preventDefault();
+        saveToDatabase();
+      }
+    }, false);
     datast.js = ace.edit("javascriptPane");
     datast.js.setTheme("ace/theme/dawn");
     datast.js.session.setMode("ace/mode/javascript");
@@ -82,182 +95,155 @@ window.onload = function() {
     datast.css.setTheme("ace/theme/dawn");
     datast.css.session.setMode("ace/mode/css");
 
+    datast.js.on("input", PlaceholderText);
+    datast.html.on("input", PlaceholderText);
+    datast.css.on("input", PlaceholderText);
+    PlaceholderText();
 }
 
-//Bruker trykker på toggle live knapper
-//Tidemann skal fikse her, har skrevet sudokode
-function toggleLive() {
-    var db = firebase.database()
-    db.ref('projects/' + params["id"]).once('value').then(function(snapshot) {
-        //Hvis prosjektet eksisterer
-        if (snapshot.val()) {
-            //Hvis det ikke finnes noe liveID for prosjektet
-            if (!snapshot.val().liveID) {
-                update = {}
-                update['projects/' + params["id"] + "/liveID"] = liveID
-                firebase.database().ref().update(update);
-                listenLive()
-            } else {
-                db.ref('projects/' + params["id"] + "/liveID").remove();
-                stopListeningLive()
-            }
-        }
-    })
+function PlaceholderText(){
+    update(datast.js,"Javascript code goes here");
+    update(datast.html,"HTML code goes here");
+    update(datast.css,"CSS code goes here");
 }
 
-function httpGetAsync(theUrl, callback) {
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.onreadystatechange = function() {
-        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-            callback(xmlHttp.responseText);
+function update(editor,text) {
+    var shouldShow = !editor.session.getValue().length;
+    var node = editor.renderer.emptyMessageNode;
+    if (!shouldShow && node) {
+        editor.renderer.scroller.removeChild(editor.renderer.emptyMessageNode);
+        editor.renderer.emptyMessageNode = null;
+    } else if (shouldShow && !node) {
+        node = editor.renderer.emptyMessageNode = document.createElement("div");
+        node.textContent = text;
+        node.className = "ace_invisible ace_emptyMessage"
+        node.style.padding = "0 9px"
+        editor.renderer.scroller.appendChild(node);
     }
-    xmlHttp.open("GET", theUrl, true); // true for asynchronous
-    xmlHttp.send(null);
 }
-//Bruker trykker på save (Brukes ved manuell lagring)
+
+function toggleLive() {
+    if(liveCoding) {
+        liveCoding = false;
+        setHTML("#live", "Live coding: off")
+        setCSS("#live", "color", "red")
+        stopListeningLive()
+    } else {
+        if(user) {
+            liveCoding = true;
+            setHTML("#live", "Live coding: on")
+            setCSS("#live", "color", "green")
+            listenLive();
+        }
+        alert("You have to be logged in to code live")
+    }
+}
+
 function saveToDatabase() {
-    if (user.uid) {
-        //Henter tiden (Brukes senere for å lagre UTC tid i databasen)
-        var d = new Date();
-        //Sjekker om brukeren har skriverettigheter til dette prosjektet
-        firebase.database().ref('users/' + user.uid + "/projects/" + params["id"]).once('value').then(function(snapshot) {
-            if (snapshot.val()) {
-                //Oppdaterer prosjektet med ny kode
-                firebase.database().ref('projects/' + params["id"]).set({
-                    js: datast.js.getValue(),
-                    html: datast.html.getValue(),
-                    css: datast.css.getValue(),
-                });
-                //Oppdaterer tiden prosjektet er sist endret
-                firebase.database().ref('users/' + user.uid + "/projects/" + params["id"]).set({
-                    lastUpdated: new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()).toString(),
-                });
+    if (user) {
+        var key = (params["id"]?key = params["id"]:db.ref().push().key);
+        firebase.database().ref('projects/' + key).set({
+            config: {
+                ownerID: user.uid,
+                publicLive: false,
+                hasAccess: {}
+            },
+            content: {
+                js: datast.js.getValue(),
+                html: datast.html.getValue(),
+                css: datast.css.getValue(),
             }
-            //Hvis prosjektet ikke er i lista til brukeren
-            else {
-                //Genererer en unik nøkkel
-                var key = firebase.database().ref('projects/').push().key
-                //Sjekker om noen andre eier prosjektIDen som er i urlen
-                firebase.database().ref('projects/' + params["id"]).once('value').then(function(snapshot) {
-                    //hvis de gjør det blir de lagt til som author av prosjektet
-                    if (snapshot.val()) {
-                        firebase.database().ref('projects/' + key).set({
-                            js: datast.js.getValue(),
-                            html: datast.html.getValue(),
-                            css: datast.css.getValue(),
-                            originalAuthor: snapshot.val().author
-                        });
-                    }
-                    //Hvis ingen andre eier prosjektiden blir brukeren lagt til som originalAuthor
-                    else {
-                        firebase.database().ref('projects/' + key).set({
-                            js: datast.js.getValue(),
-                            html: datast.html.getValue(),
-                            css: datast.css.getValue(),
-                            originalAuthor: user.displayName
-                        });
-                    }
-                    firebase.database().ref('users/' + user.uid + "/projects/" + key).set({
-                        created: new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()).toString()
-                    });
-                    window.location.replace(getURL() + "?id=" + key)
-                });
-            }
+
         });
+        if(!params["id"]) {
+            window.location.replace(getURL() + "?id=" + key);
+        }
+
     } else {
         alert("You have to be logged in to save")
     }
 }
 
-//Henter ut info fra database ved oppstart
-//Tidemann skal fikse her, har skrevet sudokode
 function getDatastFromDatabase() {
-    firebase.database().ref('projects/' + params["id"]).once('value').then(function(snapshot) {
-        //Sjekker om prosjektet eksisterer
-        if (snapshot.val()) {
-            //henter ut verdiene fra databasen og oppdaterer inputboksene
+    //Checking for projectID in url
+    if(params["id"]) {
+        db.ref('projects/' + params["id"] + '/content').once('value').then(function(snapshot) {
             datast.js.setValue(snapshot.val().js);
             datast.html.setValue(snapshot.val().html);
             datast.css.setValue(snapshot.val().css);
-            //Sjekker om du har liveID i uren
-            if (snapshot.val().liveID == params["liveID"]) {
-                listenLive()
-            } else {
-                stopListeningLive()
-            }
-        } else {
-            stopListeningLive()
-        }
-    });
-    //TODO: Sjekk om bruker eier prosjektet
+        });
+    }
 }
 
-//Tidemann skal fikse her, har skrevet sudokode
-// okei, men datast.js.setValue() / datast.js.getValue() er nye get og set på boksene
 function listenLive() {
-    if (!params["liveID"] == liveID)
-        window.location.replace(getURL() + "?id=" + key + "&liveID=" + liveID)
-    setHTML("#live", "Live coding: on")
-    setCSS("#live", "color", "green")
-    //TODO: Sjekk om bruker har tilgang til live session
-    firebase.database().ref('projects/' + params["id"] + "/liveID").on('value', function(snapshot) {
-        if (snapshot.val() == params["liveID"] || snapshot.val() == liveID) {
-            firebase.database().ref('projects/' + params["id"] + "/css").on('value', function(snapshot) {
-                CssPane.value = snapshot.val()
-            })
-            firebase.database().ref('projects/' + params["id"] + "/html").on('value', function(snapshot) {
-                HTMLPane.value = snapshot.val()
-            })
-            firebase.database().ref('projects/' + params["id"] + "/js").on('value', function(snapshot) {
-                javascriptPane.value = snapshot.val()
-            })
-        } else {
-            stopListeningLive()
+    db.ref('projects/' + params["id"] + "/content/css").on('value', function(snapshot) {
+        if(snapshot.val() !=  datast.css.getValue()) {
+            datast.css.setValue(snapshot.val());
+        }
+    })
+    db.ref('projects/' + params["id"] + "/content/html").on('value', function(snapshot) {
+        if(snapshot.val() !=  datast.html.getValue()) {
+            datast.html.setValue(snapshot.val());
+        }
+    })
+    db.ref('projects/' + params["id"] + "/content/js").on('value', function(snapshot) {
+        if(snapshot.val() !=  datast.js.getValue()) {
+            datast.js.setValue(snapshot.val());
         }
     })
     CssPane.onkeyup = function() {
         update = {}
-        update['projects/' + params["id"] + "/css"] = CssPane.value
-        firebase.database().ref().update(update);
+        update['projects/' + params["id"] + "/content/css"] = datast.css.getValue()
+        db.ref().update(update);
     }
     HTMLPane.onkeyup = function() {
         update = {}
-        update['projects/' + params["id"] + "/html"] = HTMLPane.value
-
-        firebase.database().ref().update(update);
+        update['projects/' + params["id"] + "/content/html"] = datast.html.getValue()
+        db.ref().update(update);
     }
     javascriptPane.onkeyup = function() {
         update = {}
-        update['projects/' + params["id"] + "/js"] = javascriptPane.value
-        firebase.database().ref().update(update);
+        update['projects/' + params["id"] + "/content/js"] = datast.js.getValue()
+        db.ref().update(update);
     }
 }
 
-//Tidemann skal fikse her, har skrevet sudokode
 function stopListeningLive() {
-    setHTML("#live", "Live coding: off")
-    setCSS("#live", "color", "red")
     CssPane.onkeyup = null;
     HTMLPane.onkeyup = null;
     javascriptPane.onkeyup = null;
 
-    firebase.database().ref('projects/' + params["id"] + "/css").off()
-    firebase.database().ref('projects/' + params["id"] + "/html").off()
-    firebase.database().ref('projects/' + params["id"] + "/js").off()
+    db.ref('projects/' + params["id"] + "/css").off()
+    db.ref('projects/' + params["id"] + "/html").off()
+    db.ref('projects/' + params["id"] + "/js").off()
 }
 
 //Funksjon for loginknappen
 function login() {
-    //Hvis bruker er pålogget
+    //if user is logged in
     if (user) {
         firebase.auth().signOut();
         setHTML("#loginBtn", "Logout")
         setCSS("#loginpopup", "visibility", "hidden")
     }
-    //Hvis bruker ikke er pålogget
-    else
+    else {
         setHTML("#loginBtn", "Login")
-    setCSS("#loginpopup", "visibility", "visible")
+        if(getElement("#loginpopup").style.visibility == "visible") {
+            setCSS("#loginpopup", "visibility", "hidden")
+        } else {
+            setCSS("#loginpopup", "visibility", "visible")
+        }
+
+    }
+}
+
+function toggleSettings() {
+    if(document.getElementById("settingspopup").style.visibility == "visible") {
+        setCSS("#settingspopup", "visibility", "hidden")
+    }else {
+        setCSS("#settingspopup", "visibility", "visible")
+    }
+
 }
 
 //Henter ut parametere fra URLen
@@ -294,7 +280,6 @@ function getURL() {
     else
         return url
 }
-
 
 //Funksjoner for å endre DOM elementer
 function getElement(selector) {

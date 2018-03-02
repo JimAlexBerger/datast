@@ -1,6 +1,5 @@
 function loginWithProvider(provider) {
-    firebase.auth().signInWithPopup(provider).then(function(result) {
-    }).catch(function(error) {
+    firebase.auth().signInWithPopup(provider).catch(function(error) {
         console.warn("Error during login")
         // Handle Errors here.
         var errorCode = error.code;
