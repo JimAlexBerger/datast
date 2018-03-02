@@ -45,6 +45,7 @@ window.onload = function() {
             setCSS("#pic", "visibility", "visible")
             setCSS("#pic", "height", "100px")
             setCSS("#pic", "width", "100px")
+            setCSS("#saveBtn","display","inline-block")
             getElement("#pic").src = u.photoURL
         } else {
             setCSS("#saveBtn","display","none")
@@ -135,14 +136,25 @@ function toggleLive() {
             setCSS("#live", "color", "green")
             listenLive();
         }
-        alert("You have to be logged in to code live")
+        toastr.options = {
+          "positionClass": "toast-top-center",
+          "showDuration": "300",
+          "hideDuration": "1000",
+          "timeOut": "5000",
+          "extendedTimeOut": "1000",
+          "showEasing": "swing",
+          "hideEasing": "linear",
+          "showMethod": "fadeIn",
+          "hideMethod": "fadeOut"
+        }
+        toastr["info"]("", "You have to be logged in to code live")
     }
 }
 
 function saveToDatabase() {
     if (user) {
         var key = (params["id"]?key = params["id"]:db.ref().push().key);
-        firebase.database().ref('projects/' + key).set({
+        var promise = firebase.database().ref('projects/' + key).set({
             config: {
                 ownerID: user.uid,
                 publicLive: false,
@@ -153,14 +165,55 @@ function saveToDatabase() {
                 html: datast.html.getValue(),
                 css: datast.css.getValue(),
             }
+        });
+
+        promise.then(() => {
+            toastr.options = {
+              "positionClass": "toast-top-center",
+              "showDuration": "300",
+              "hideDuration": "1000",
+              "timeOut": "5000",
+              "extendedTimeOut": "1000",
+              "showEasing": "swing",
+              "hideEasing": "linear",
+              "showMethod": "fadeIn",
+              "hideMethod": "fadeOut"
+            }
+            toastr["success"]("", "Saved to database");
+            if(!params["id"]) {
+                window.location.replace(getURL() + "?id=" + key);
+            }
+
 
         });
-        if(!params["id"]) {
-            window.location.replace(getURL() + "?id=" + key);
-        }
+        promise.catch(() => {
+            toastr.options = {
+              "positionClass": "toast-top-center",
+              "showDuration": "300",
+              "hideDuration": "1000",
+              "timeOut": "5000",
+              "extendedTimeOut": "1000",
+              "showEasing": "swing",
+              "hideEasing": "linear",
+              "showMethod": "fadeIn",
+              "hideMethod": "fadeOut"
+            }
+            toastr["error"]("", "You do not have write access for this project")
+        });
 
     } else {
-        alert("You have to be logged in to save")
+        toastr.options = {
+          "positionClass": "toast-top-center",
+          "showDuration": "300",
+          "hideDuration": "1000",
+          "timeOut": "5000",
+          "extendedTimeOut": "1000",
+          "showEasing": "swing",
+          "hideEasing": "linear",
+          "showMethod": "fadeIn",
+          "hideMethod": "fadeOut"
+        }
+        toastr["info"]("", "You have to be logged in to save")
     }
 }
 
