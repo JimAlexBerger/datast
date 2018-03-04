@@ -8,7 +8,9 @@
     "CSS OUT";
     justify-items: center;
 }
-
+#live {
+    color: red;
+}
 #menu {
     height: 15vh;
     background-color: cornflowerblue;

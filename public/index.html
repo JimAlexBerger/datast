@@ -53,7 +53,8 @@
             <button id="loginBtn">Login</button>
             <button id="renderBtn">Render</button>
             <button id="saveBtn">Save</button>
-            <button id="live">Live koding</button>
+            <button id="fork">Fork</button>
+            <button id="live">Live coding:  off</button>
             <button id="settings">Settings</button>
         </div>
 
@@ -73,8 +74,10 @@
     </div>
 
     <div id="settingspopup">
+        Public live editing: <button type="button" id="togglePublicLive" name="togglePublicLive"></button>
         <label for="email">email</label>
         <input type="text" name="email" placeholder="email">
+        <button id="inviteMemeber">Invite</button>
     </div>
 
 
@@ -83,7 +86,6 @@
             try {
                 let app = firebase.app();
                 let features = ['auth', 'database', 'messaging', 'storage'].filter(feature => typeof app[feature] === 'function');
-                //document.getElementById('load').innerHTML = `Firebase SDK loaded with ${features.join(', ')}`;
             } catch (e) {
                 console.error(e);
                 //document.getElementById('load').innerHTML = 'Error loading the Firebase SDK, check the console.';

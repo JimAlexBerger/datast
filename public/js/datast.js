@@ -29,7 +29,22 @@ var params;
 var datast = {js:null,html:null,css:null};
 var db;
 var liveCoding = false;
-var projectStatus = -1; //-1 = not ready, 0 = empty project, 1 = owner, 2 = not owner
+var typingTimer;
+var doneTypingInterval = 500;
+
+toastr.options = {
+  "positionClass": "toast-top-center",
+  "showDuration": "300",
+  "hideDuration": "1000",
+  "timeOut": "5000",
+  "extendedTimeOut": "1000",
+  "showEasing": "swing",
+  "hideEasing": "linear",
+  "showMethod": "fadeIn",
+  "hideMethod": "fadeOut",
+  "preventDuplicates": true
+}
+
 window.onload = function() {
     db = firebase.database();
     params = getParams()
@@ -38,20 +53,20 @@ window.onload = function() {
     firebase.auth().onAuthStateChanged(function(u) {
         user = u;
         if (u) {
+            console.log("Signed in")
+            setCSS("#saveBtn","display","inline-block")
             setHTML("#loginBtn", "Logout")
             setCSS("#loginpopup", "visibility", "hidden")
-            console.log("Signed in")
             setHTML("#info", "Signed in as " + u.displayName)
             setCSS("#pic", "visibility", "visible")
             setCSS("#pic", "height", "100px")
             setCSS("#pic", "width", "100px")
-            setCSS("#saveBtn","display","inline-block")
             getElement("#pic").src = u.photoURL
         } else {
-            setCSS("#saveBtn","display","none")
-            setCSS("#pic", "visibility", "hidden")
-            setHTML("#info", "")
             console.log("Not logged in")
+            setCSS("#saveBtn","display","none")
+            setCSS("#pic", "display", "none")
+            setHTML("#info", "")
             setHTML("#loginBtn", "Login")
             setCSS("#loginpopup", "visibility", "hidden")
         }
@@ -59,11 +74,12 @@ window.onload = function() {
 
     //onclick for buttons
     getElement("#renderBtn").onclick = renderValues;
-    getElement("#loginBtn").onclick = login
-    getElement("#saveBtn").onclick = saveToDatabase
-    getElement("#live").onclick = toggleLive
-    getElement("#settings").onclick = toggleSettings
-
+    getElement("#loginBtn").onclick = login;
+    getElement("#saveBtn").onclick = saveToDatabase;
+    getElement("#fork").onclick = fork;
+    getElement("#live").onclick = toggleLive;
+    getElement("#settings").onclick = toggleSettings;
+    getElement("#togglePublicLive").onclick = togglePublicLive;
     getElement("#signinGoogle").addEventListener('click', function() {
         loginWithProvider(new firebase.auth.GoogleAuthProvider())
     });
@@ -77,13 +93,14 @@ window.onload = function() {
         loginWithProvider(new firebase.auth.TwitterAuthProvider())
     });
 
-    //Save to database when ctrl + s is clicked
+    //Save to database when ctrl + S is pressed
     document.addEventListener("keydown", function(e) {
       if (e.keyCode == 83 && (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)) {
         e.preventDefault();
         saveToDatabase();
       }
     }, false);
+
     datast.js = ace.edit("javascriptPane");
     datast.js.setTheme("ace/theme/dawn");
     datast.js.session.setMode("ace/mode/javascript");
@@ -96,19 +113,35 @@ window.onload = function() {
     datast.css.setTheme("ace/theme/dawn");
     datast.css.session.setMode("ace/mode/css");
 
-    datast.js.on("input", PlaceholderText);
-    datast.html.on("input", PlaceholderText);
-    datast.css.on("input", PlaceholderText);
-    PlaceholderText();
+    stopListeningLive();
+    getPublicLive();
+
+    //Editors onkeydown functions
+    javascriptPane.onkeydown = function() {
+        clearTimeout(typingTimer);
+    };
+    HTMLPane.onkeydown = function() {
+        clearTimeout(typingTimer);
+    };
+    CssPane.onkeydown = function() {
+        clearTimeout(typingTimer);
+    };
+
 }
 
-function PlaceholderText(){
-    update(datast.js,"Javascript code goes here");
-    update(datast.html,"HTML code goes here");
-    update(datast.css,"CSS code goes here");
+function checkPlaceholderText() {
+    updatePlaceholder(datast.js,"Javascript code goes here");
+    updatePlaceholder(datast.html,"HTML code goes here");
+    updatePlaceholder(datast.css,"CSS code goes here");
 }
 
-function update(editor,text) {
+function setSelection(id, start, end) {
+    var input = document.getElementById(id);
+    input.focus();
+    input.setSelectionRange(start, end);
+}
+
+function updatePlaceholder(editor,text) {
     var shouldShow = !editor.session.getValue().length;
     var node = editor.renderer.emptyMessageNode;
     if (!shouldShow && node) {
@@ -130,35 +163,20 @@ function toggleLive() {
         setCSS("#live", "color", "red")
         stopListeningLive()
     } else {
-        if(user) {
-            liveCoding = true;
-            setHTML("#live", "Live coding: on")
-            setCSS("#live", "color", "green")
-            listenLive();
-        }
-        toastr.options = {
-          "positionClass": "toast-top-center",
-          "showDuration": "300",
-          "hideDuration": "1000",
-          "timeOut": "5000",
-          "extendedTimeOut": "1000",
-          "showEasing": "swing",
-          "hideEasing": "linear",
-          "showMethod": "fadeIn",
-          "hideMethod": "fadeOut"
-        }
-        toastr["info"]("", "You have to be logged in to code live")
+        liveCoding = true;
+        setHTML("#live", "Live coding: on")
+        setCSS("#live", "color", "green")
+        listenLive();
     }
 }
 
 function saveToDatabase() {
     if (user) {
-        var key = (params["id"]?key = params["id"]:db.ref().push().key);
+        var key = (params["id"]?params["id"]:db.ref().push().key);
         var promise = firebase.database().ref('projects/' + key).set({
             config: {
                 ownerID: user.uid,
                 publicLive: false,
-                hasAccess: {}
             },
             content: {
                 js: datast.js.getValue(),
@@ -168,17 +186,6 @@ function saveToDatabase() {
         });
 
         promise.then(() => {
-            toastr.options = {
-              "positionClass": "toast-top-center",
-              "showDuration": "300",
-              "hideDuration": "1000",
-              "timeOut": "5000",
-              "extendedTimeOut": "1000",
-              "showEasing": "swing",
-              "hideEasing": "linear",
-              "showMethod": "fadeIn",
-              "hideMethod": "fadeOut"
-            }
             toastr["success"]("", "Saved to database");
             if(!params["id"]) {
                 window.location.replace(getURL() + "?id=" + key);
@@ -187,32 +194,11 @@ function saveToDatabase() {
 
         });
         promise.catch(() => {
-            toastr.options = {
-              "positionClass": "toast-top-center",
-              "showDuration": "300",
-              "hideDuration": "1000",
-              "timeOut": "5000",
-              "extendedTimeOut": "1000",
-              "showEasing": "swing",
-              "hideEasing": "linear",
-              "showMethod": "fadeIn",
-              "hideMethod": "fadeOut"
-            }
+
             toastr["error"]("", "You do not have write access for this project")
         });
 
     } else {
-        toastr.options = {
-          "positionClass": "toast-top-center",
-          "showDuration": "300",
-          "hideDuration": "1000",
-          "timeOut": "5000",
-          "extendedTimeOut": "1000",
-          "showEasing": "swing",
-          "hideEasing": "linear",
-          "showMethod": "fadeIn",
-          "hideMethod": "fadeOut"
-        }
         toastr["info"]("", "You have to be logged in to save")
     }
 }
@@ -221,10 +207,46 @@ function getDatastFromDatabase() {
     //Checking for projectID in url
     if(params["id"]) {
         db.ref('projects/' + params["id"] + '/content').once('value').then(function(snapshot) {
-            datast.js.setValue(snapshot.val().js);
-            datast.html.setValue(snapshot.val().html);
-            datast.css.setValue(snapshot.val().css);
+            if(snapshot.val()) {
+                datast.js.setValue(snapshot.val().js);
+                datast.html.setValue(snapshot.val().html);
+                datast.css.setValue(snapshot.val().css);
+                checkPlaceholderText();
+                renderValues();
+            }
         });
+    }
+    else {
+        document.addEventListener('DOMContentLoaded', function() {
+            checkPlaceholderText();
+        });
+    }
+}
+
+function fork() {
+    if (user) {
+        var key = db.ref().push().key;
+        var promise = firebase.database().ref('projects/' + key).set({
+            config: {
+                ownerID: user.uid,
+                publicLive: false,
+            },
+            content: {
+                js: datast.js.getValue(),
+                html: datast.html.getValue(),
+                css: datast.css.getValue(),
+            }
+        });
+
+        promise.then(() => {
+            toastr["success"]("", "Forked project");
+            window.location.replace(getURL() + "?id=" + key);
+        });
+        promise.catch(() => {
+            toastr["error"]("Code: 001", "Something went wrong")
+        });
+    } else {
+        toastr["info"]("", "You have to be logged in to fork a project")
     }
 }
 
@@ -232,43 +254,77 @@ function listenLive() {
     db.ref('projects/' + params["id"] + "/content/css").on('value', function(snapshot) {
         if(snapshot.val() !=  datast.css.getValue()) {
             datast.css.setValue(snapshot.val());
+            resetTimer(datast.css,"Css code goes here")
         }
     })
     db.ref('projects/' + params["id"] + "/content/html").on('value', function(snapshot) {
         if(snapshot.val() !=  datast.html.getValue()) {
             datast.html.setValue(snapshot.val());
+            resetTimer(datast.html,"HTML code goes here")
         }
     })
     db.ref('projects/' + params["id"] + "/content/js").on('value', function(snapshot) {
         if(snapshot.val() !=  datast.js.getValue()) {
             datast.js.setValue(snapshot.val());
+            resetTimer(datast.js,"Javascript code goes here")
         }
     })
+
     CssPane.onkeyup = function() {
         update = {}
         update['projects/' + params["id"] + "/content/css"] = datast.css.getValue()
-        db.ref().update(update);
+        db.ref().update(update).catch(function() {
+            toastr["info"]("But you can still watch live", "You dont have write access")
+        });
+        resetTimer(datast.css,"Css code goes here")
     }
     HTMLPane.onkeyup = function() {
         update = {}
         update['projects/' + params["id"] + "/content/html"] = datast.html.getValue()
-        db.ref().update(update);
+        db.ref().update(update).catch(function() {
+            toastr["info"]("But you can still watch live", "You dont have write access")
+        });
+        resetTimer(datast.html,"HTML code goes here")
+
     }
     javascriptPane.onkeyup = function() {
         update = {}
         update['projects/' + params["id"] + "/content/js"] = datast.js.getValue()
-        db.ref().update(update);
+        db.ref().update(update).catch(function() {
+            toastr["info"]("But you can still watch live", "You dont have write access")
+        });
+        resetTimer(datast.js,"Javascript code goes here")
+
     }
 }
 
-function stopListeningLive() {
-    CssPane.onkeyup = null;
-    HTMLPane.onkeyup = null;
-    javascriptPane.onkeyup = null;
+function resetTimer(editor,text) {
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(renderValues, doneTypingInterval);
+    updatePlaceholder(editor,text);
+}
 
-    db.ref('projects/' + params["id"] + "/css").off()
-    db.ref('projects/' + params["id"] + "/html").off()
-    db.ref('projects/' + params["id"] + "/js").off()
+function stopListeningLive() {
+    javascriptPane.onkeyup = function() {
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(renderValues, doneTypingInterval);
+        updatePlaceholder(datast.js,"Javascript code goes here");
+    };
+    HTMLPane.onkeyup = function() {
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(renderValues, doneTypingInterval);
+        updatePlaceholder(datast.html,"HTML code goes here");
+    };
+    CssPane.onkeyup = function() {
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(renderValues, doneTypingInterval);
+        updatePlaceholder(datast.css,"CSS code goes here");
+    };
+
+
+    db.ref('projects/' + params["id"] + "content/css").off()
+    db.ref('projects/' + params["id"] + "content/html").off()
+    db.ref('projects/' + params["id"] + "content/js").off()
 }
 
 //Funksjon for loginknappen
@@ -299,6 +355,30 @@ function toggleSettings() {
 
 }
 
+function getPublicLive() {
+    if(user && params["id"]) {
+        db.ref('projects/' + params["id"] + '/config').once('value').then(function(snapshot) {
+            getElement("#togglePublicLive").innerHTML = (snapshot.val().publicLive?"on":"off")
+            setCSS("#togglePublicLive","color",(snapshot.val().publicLive?"green":"red"));
+        }).catch(function() {
+            console.log()
+        })
+    } else {
+
+    }
+}
+
+function togglePublicLive() {
+    db.ref('projects/' + params["id"] + '/config').once('value').then(function(snapshot) {
+        update = {}
+        update['projects/' + params["id"] + '/config/publicLive'] = !snapshot.val().publicLive
+        db.ref().update(update).then(function(){
+            getElement("#togglePublicLive").innerHTML = (!snapshot.val().publicLive?"on":"off")
+            setCSS("#togglePublicLive","color",(!snapshot.val().publicLive?"green":"red"))
+        });
+    });
+}
+
 //Henter ut parametere fra URLen
 function getParams() {
     var parameters = {}
@@ -325,7 +405,7 @@ function getParams() {
     return parameters
 }
 
-//Midlertidig funksjon slik at vi kan bruke localhost
+//get url without paramteres
 function getURL() {
     var url = window.location.href
     if (url.indexOf("?") > 0)
