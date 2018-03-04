@@ -31,6 +31,7 @@ var db;
 var liveCoding = false;
 var typingTimer;
 var doneTypingInterval = 500;
+var jsInsertPoint, htmlInsertPoint, cssInsertPoint;
 
 toastr.options = {
   "positionClass": "toast-top-center",
@@ -44,7 +45,6 @@ toastr.options = {
   "hideMethod": "fadeOut",
   "preventDuplicates": true
 }
-
 window.onload = function() {
     db = firebase.database();
     params = getParams()
@@ -80,6 +80,7 @@ window.onload = function() {
     getElement("#live").onclick = toggleLive;
     getElement("#settings").onclick = toggleSettings;
     getElement("#togglePublicLive").onclick = togglePublicLive;
+
     getElement("#signinGoogle").addEventListener('click', function() {
         loginWithProvider(new firebase.auth.GoogleAuthProvider())
     });
@@ -254,19 +255,24 @@ function listenLive() {
     db.ref('projects/' + params["id"] + "/content/css").on('value', function(snapshot) {
         if(snapshot.val() !=  datast.css.getValue()) {
             datast.css.setValue(snapshot.val());
-            resetTimer(datast.css,"Css code goes here")
+            resetTimer(datast.css,"Css code goes here");
+            datast.css.gotoLine(cssInsertPoint.row+1, cssInsertPoint.column)
         }
     })
     db.ref('projects/' + params["id"] + "/content/html").on('value', function(snapshot) {
         if(snapshot.val() !=  datast.html.getValue()) {
             datast.html.setValue(snapshot.val());
             resetTimer(datast.html,"HTML code goes here")
+            datast.html.gotoLine(htmlInsertPoint.row+1, htmlInsertPoint.column)
+
         }
     })
     db.ref('projects/' + params["id"] + "/content/js").on('value', function(snapshot) {
         if(snapshot.val() !=  datast.js.getValue()) {
             datast.js.setValue(snapshot.val());
-            resetTimer(datast.js,"Javascript code goes here")
+            console.log(jsInsertPoint);
+            datast.js.gotoLine(jsInsertPoint.row +1, jsInsertPoint.column)
+
         }
     })
 
@@ -276,7 +282,8 @@ function listenLive() {
         db.ref().update(update).catch(function() {
             toastr["info"]("But you can still watch live", "You dont have write access")
         });
-        resetTimer(datast.css,"Css code goes here")
+        resetTimer(datast.css,"Css code goes here");
+        cssInsertPoint = datast.css.getCursorPosition();
     }
     HTMLPane.onkeyup = function() {
         update = {}
@@ -285,7 +292,7 @@ function listenLive() {
             toastr["info"]("But you can still watch live", "You dont have write access")
         });
         resetTimer(datast.html,"HTML code goes here")
-
+        htmlInsertPoint = datast.html.getCursorPosition();
     }
     javascriptPane.onkeyup = function() {
         update = {}
@@ -293,8 +300,7 @@ function listenLive() {
         db.ref().update(update).catch(function() {
             toastr["info"]("But you can still watch live", "You dont have write access")
         });
-        resetTimer(datast.js,"Javascript code goes here")
-
+        jsInsertPoint = datast.js.getCursorPosition();
     }
 }
 
@@ -304,24 +310,22 @@ function resetTimer(editor,text) {
     updatePlaceholder(editor,text);
 }
 
+
 function stopListeningLive() {
     javascriptPane.onkeyup = function() {
-        clearTimeout(typingTimer);
-        typingTimer = setTimeout(renderValues, doneTypingInterval);
+        jsInsertPoint = datast.js.getCursorPosition();
         updatePlaceholder(datast.js,"Javascript code goes here");
+
     };
     HTMLPane.onkeyup = function() {
-        clearTimeout(typingTimer);
-        typingTimer = setTimeout(renderValues, doneTypingInterval);
-        updatePlaceholder(datast.html,"HTML code goes here");
+        resetTimer(datast.html,"HTML code goes here");
+        htmlInsertPoint = datast.html.getCursorPosition();
+
     };
     CssPane.onkeyup = function() {
-        clearTimeout(typingTimer);
-        typingTimer = setTimeout(renderValues, doneTypingInterval);
-        updatePlaceholder(datast.css,"CSS code goes here");
+        resetTimer(datast.css,"CSS code goes here");
+        cssInsertPoint = datast.css.getCursorPosition();
     };
-
-
     db.ref('projects/' + params["id"] + "content/css").off()
     db.ref('projects/' + params["id"] + "content/html").off()
     db.ref('projects/' + params["id"] + "content/js").off()
